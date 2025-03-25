@@ -1,0 +1,199 @@
+/* General Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+  }
+  
+  
+  .App {
+    text-align: center;
+  }
+  
+  
+  .App-logo {
+    height: 40vmin;
+    pointer-events: none;
+  }
+  
+  
+  @media (prefers-reduced-motion: no-preference) {
+    .App-logo {
+      animation: App-logo-spin infinite 20s linear;
+    }
+  }
+  
+  
+  .App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: #ffffff;
+  }
+  
+  
+  .App-link {
+    color: #61dafb;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  
+  .App-link:hover {
+    color: #21a1f1;
+  }
+  
+  
+  @keyframes App-logo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  
+  /* Container Styles */
+  .container,
+  .registration-container,
+  .dashboard-container,
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f9;
+    transition: background-color 0.3s ease;
+  }
+  
+  
+  .container:hover,
+  .registration-container:hover,
+  .dashboard-container:hover,
+  .login-container:hover {
+    background-color: #e9ecef;
+  }
+  
+  
+  /* Card Styles */
+  .card,
+  .registration-card,
+  .dashboard-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 320px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  
+  .card:hover,
+  .registration-card:hover,
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  
+  /* Button Styles */
+  .button,
+  .registration-button {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 80%;
+  }
+  
+  
+  .button:hover,
+  .registration-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+  }
+  
+  
+  .button.secondary,
+  .registration-button-secondary {
+    background-color: #6c757d;
+  }
+  
+  
+  .button.secondary:hover,
+  .registration-button-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+  }
+  
+  
+  /* Typography */
+  .heading,
+  .registration-heading {
+    color: #333333;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    transition: color 0.3s ease;
+  }
+  
+  
+  .heading:hover,
+  .registration-heading:hover {
+    color: #007bff;
+  }
+  
+  
+  .paragraph,
+  .registration-paragraph {
+    color: #666666;
+    font-size: 16px;
+    line-height: 1.5;
+    transition: color 0.3s ease;
+  }
+  
+  
+  .paragraph:hover,
+  .registration-paragraph:hover {
+    color: #333333;
+  }
+  
+  
+  /* Input Fields */
+  .input,
+  .input-field,
+  .registration-input,
+  .registration-select {
+    width: 80%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  
+  .input:focus,
+  .input-field:focus,
+  .registration-input:focus,
+  .registration-select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+  }
+  
