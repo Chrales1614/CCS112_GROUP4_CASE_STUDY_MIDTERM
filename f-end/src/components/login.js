@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css"; // Import the styles
-
+import "../App.css"; // Import global styles
+import "../AUTH.CSS"; // Import auth-specific styles
 
 const Login = ({ onLogin }) => {
     const [email, setEmail] = useState("");
@@ -9,10 +9,8 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-
     const handleLogin = async (e) => {
         e.preventDefault();
-
 
         try {
             const response = await fetch("http://127.0.0.1:8000/api/login", {
@@ -21,9 +19,7 @@ const Login = ({ onLogin }) => {
                 body: JSON.stringify({ email, password }),
             });
 
-
             const data = await response.json();
-
 
             if (response.ok) {
                 onLogin(data.token);
@@ -36,20 +32,22 @@ const Login = ({ onLogin }) => {
         }
     };
 
-
     return (
         <div className="login-container">
-            <div className="card">
-                <h2 className="heading">Login</h2>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <form onSubmit={handleLogin}>
+            <div className="auth-card">
+                <h2 className="auth-title">Welcome Back</h2>
+                <p className="auth-subtitle">Log in to your account</p>
+                
+                {error && <div className="auth-error">{error}</div>}
+                
+                <form className="auth-form" onSubmit={handleLogin}>
                     <input
                         type="email"
-                        placeholder="Email"
+                        placeholder="Email Address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="input"
+                        className="auth-input"
                     />
                     <input
                         type="password"
@@ -57,22 +55,35 @@ const Login = ({ onLogin }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="input"
+                        className="auth-input"
                     />
-                    <button type="submit" className="button">
+                    
+                    <div className="d-flex justify-content-between">
+                        <div className="login-remember">
+                            <input type="checkbox" id="remember" />
+                            <label htmlFor="remember">Remember me</label>
+                        </div>
+                        <div className="login-forgot">
+                            <a href="#" className="auth-link">Forgot password?</a>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" className="auth-button">
                         Login
                     </button>
                 </form>
+                
+                <div className="auth-divider">or</div>
+                
                 <button
                     onClick={() => navigate("/register")}
-                    className="button secondary"
+                    className="auth-button auth-button-secondary"
                 >
-                    Go to Register
+                    Create New Account
                 </button>
             </div>
         </div>
     );
 };
-
 
 export default Login;
