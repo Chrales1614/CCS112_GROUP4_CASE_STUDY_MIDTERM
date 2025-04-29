@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css"; // Import global styles
-import "../AUTH.CSS"; // Import auth-specific styles
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const Registration = () => {
     const [name, setName] = useState("");
@@ -17,13 +16,16 @@ const Registration = () => {
     const handlePasswordChange = (e) => {
         const newPassword = e.target.value;
         setPassword(newPassword);
-        
-        // Evaluate password strength
+
         if (newPassword.length < 8) {
             setPasswordError("Password must be at least 8 characters long");
             setPasswordStrength("weak");
-        } else if (newPassword.length >= 8 && 
-                 (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) && /[0-9]/.test(newPassword))) {
+        } else if (
+            newPassword.length >= 8 &&
+            /[A-Z]/.test(newPassword) &&
+            /[a-z]/.test(newPassword) &&
+            /[0-9]/.test(newPassword)
+        ) {
             setPasswordError("");
             setPasswordStrength("strong");
         } else if (newPassword.length >= 8) {
@@ -49,12 +51,12 @@ const Registration = () => {
             const response = await fetch("http://127.0.0.1:8000/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    name, 
-                    email, 
-                    password, 
-                    password_confirmation: confirmPassword, 
-                    role 
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    password_confirmation: confirmPassword,
+                    role,
                 }),
             });
 
@@ -71,95 +73,104 @@ const Registration = () => {
     };
 
     return (
-        <div className="registration-container">
-            <div className="auth-card">
-                <h2 className="auth-title">Create Account</h2>
-                <p className="auth-subtitle">Join our team management platform</p>
-                
-                {error && <div className="auth-error">{error}</div>}
-                
-                <form className="auth-form" onSubmit={handleRegister}>
-                    <input
-                        type="text"
-                        placeholder="Full Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        className="auth-input"
-                    />
-                    
-                    <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="auth-input"
-                    />
-                    
-                    <div>
+        <div className="container d-flex justify-content-center align-items-center vh-100">
+            <div className="card shadow-lg p-4" style={{ maxWidth: "500px", width: "100%" }}>
+                <h2 className="text-center mb-3">Create Account</h2>
+                <p className="text-center text-muted mb-4">Join our team management platform</p>
+
+                {error && <div className="alert alert-danger">{error}</div>}
+
+                <form onSubmit={handleRegister}>
+                    <div className="mb-3">
+                        <label className="form-label">Full Name</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Email Address</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Password</label>
                         <input
                             type="password"
-                            placeholder="Password"
+                            className="form-control"
+                            placeholder="Enter your password"
                             value={password}
                             onChange={handlePasswordChange}
                             required
-                            className="auth-input"
                         />
-                        
                         {passwordStrength && (
-                            <div className="password-strength">
-                                <div className={`password-strength-meter strength-${passwordStrength}`}></div>
+                            <div className="mt-2">
+                                <small className={`text-${passwordStrength === "strong" ? "success" : passwordStrength === "medium" ? "warning" : "danger"}`}>
+                                    Password strength: {passwordStrength}
+                                </small>
                             </div>
                         )}
-                        
-                        {passwordError && <div className="auth-error">{passwordError}</div>}
-                        
-                        <p className="password-requirements">
-                            Password must be at least 8 characters
-                        </p>
+                        {passwordError && <small className="text-danger">{passwordError}</small>}
                     </div>
-                    
-                    <input
-                        type="password"
-                        placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        className="auth-input"
-                    />
-                    
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="auth-select"
-                    >
-                        <option value="admin">Admin</option>
-                        <option value="project_manager">Project Manager</option>
-                        <option value="team_member">Team Member</option>
-                        <option value="client">Client</option>
-                    </select>
-                    
-                    <div className="registration-terms">
-                        <input type="checkbox" id="terms" required />
-                        <label htmlFor="terms">
+
+                    <div className="mb-3">
+                        <label className="form-label">Confirm Password</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            placeholder="Confirm your password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Role</label>
+                        <select
+                            className="form-select"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                        >
+                            <option value="admin">Admin</option>
+                            <option value="project_manager">Project Manager</option>
+                            <option value="team_member">Team Member</option>
+                            <option value="client">Client</option>
+                        </select>
+                    </div>
+
+                    <div className="form-check mb-3">
+                        <input type="checkbox" className="form-check-input" id="terms" required />
+                        <label className="form-check-label" htmlFor="terms">
                             I agree to the Terms of Service and Privacy Policy
                         </label>
                     </div>
-                    
-                    <button type="submit" className="auth-button">
+
+                    <button type="submit" className="btn btn-primary w-100 mb-3">
                         Create Account
                     </button>
                 </form>
-                
-                <div className="auth-divider">or</div>
-                
-                <button 
-                    onClick={() => navigate("/")} 
-                    className="auth-button auth-button-secondary"
-                >
-                    Back to Login
-                </button>
+
+                <div className="text-center">
+                    <button
+                        onClick={() => navigate("/")}
+                        className="btn btn-outline-secondary w-100"
+                    >
+                        Back to Login
+                    </button>
+                </div>
             </div>
         </div>
     );

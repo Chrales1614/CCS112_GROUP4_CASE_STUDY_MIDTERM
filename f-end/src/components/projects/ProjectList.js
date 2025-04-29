@@ -27,36 +27,40 @@ const ProjectList = () => {
     fetchProjects();
   }, []);
   
-  if (loading) return <div>Loading projects...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="text-center my-5">Loading projects...</div>;
+  if (error) return <div className="alert alert-danger text-center">{error}</div>;
   
   return (
-    <div className="project-list">
-      <h2>Projects</h2>
-      <Link to="/projects/create" className="btn btn-primary mb-3">Create New Project</Link>
+    <div className="project-list container mt-5">
+      <h2 className="text-center mb-4 p-4 bg-light rounded">Projects</h2>
+      <div className="d-flex justify-content-end mb-3">
+        <Link to="/projects/create" className="btn btn-primary shadow-sm">Create New Project</Link>
+      </div>
       
       <div className="row">
         {projects.length === 0 ? (
-          <p>No projects found. Create a new project to get started.</p>
+          <p className="text-muted text-center">No projects found. Create a new project to get started.</p>
         ) : (
           projects.map(project => (
             <div key={project.id} className="col-md-4 mb-4">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">{project.name}</h5>
-                  <p className="card-text">{project.description}</p>
-                  <div className="d-flex justify-content-between mb-2">
+              <div className="card shadow-sm h-100">
+                <div className="card-body d-flex flex-column">
+                  <h5 className="card-title text-primary">{project.name}</h5>
+                  <p className="card-text text-muted">{project.description}</p>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
                     <span className={`badge bg-${getStatusBadge(project.status)}`}>
                       {project.status}
                     </span>
-                    <span>Due: {new Date(project.end_date).toLocaleDateString()}</span>
+                    <small className="text-muted">Due: {new Date(project.end_date).toLocaleDateString()}</small>
                   </div>
-                  <Link to={`/projects/${project.id}`} className="btn btn-info btn-sm me-2">
-                    View
-                  </Link>
-                  <Link to={`/projects/${project.id}/edit`} className="btn btn-warning btn-sm">
-                    Edit
-                  </Link>
+                  <div className="mt-auto">
+                    <Link to={`/projects/${project.id}`} className="btn btn-info btn-sm me-2 shadow-sm">
+                      View
+                    </Link>
+                    <Link to={`/projects/${project.id}/edit`} className="btn btn-warning btn-sm shadow-sm">
+                      Edit
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

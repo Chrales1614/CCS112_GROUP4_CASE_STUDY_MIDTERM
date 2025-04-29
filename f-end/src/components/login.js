@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css"; // Import global styles
-import "../AUTH.CSS"; // Import auth-specific styles
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const Login = ({ onLogin }) => {
     const [email, setEmail] = useState("");
@@ -33,51 +32,85 @@ const Login = ({ onLogin }) => {
     };
 
     return (
-        <div className="login-container">
-            <div className="auth-card">
-                <h2 className="auth-title">Welcome Back</h2>
-                <p className="auth-subtitle">Log in to your account</p>
-                
-                {error && <div className="auth-error">{error}</div>}
-                
-                <form className="auth-form" onSubmit={handleLogin}>
-                    <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="auth-input"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="auth-input"
-                    />
-                    
-                    <div className="d-flex justify-content-between">
-                        <div className="login-remember">
-                            <input type="checkbox" id="remember" />
-                            <label htmlFor="remember">Remember me</label>
-                        </div>
-                        <div className="login-forgot">
-                            <a href="#" className="auth-link">Forgot password?</a>
-                        </div>
+        <div className="login-container d-flex justify-content-center align-items-center vh-100">
+            <div className="login-card shadow-lg p-5 rounded bg-white" style={{ maxWidth: "400px", width: "100%" }}>
+                <h2 className="text-center mb-4 text-primary fw-bold">Klick Login</h2>
+                <p className="text-center text-muted mb-4">Log in to your account</p>
+
+                {error && (
+                    <div className="alert alert-danger text-center" role="alert">
+                        {error}
                     </div>
-                    
-                    <button type="submit" className="auth-button">
+                )}
+
+                <form onSubmit={handleLogin}>
+                    <div className="mb-4">
+                        <label htmlFor="email" className="form-label fw-semibold">Email Address</label>
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="form-control"
+                            aria-label="Email Address"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="password" className="form-label fw-semibold">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="form-control"
+                            aria-label="Password"
+                        />
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div className="form-check">
+                            <input
+                                type="checkbox"
+                                id="remember"
+                                className="form-check-input"
+                            />
+                            <label
+                                htmlFor="remember"
+                                className="form-check-label"
+                            >
+                                Remember me
+                            </label>
+                        </div>
+                        <button
+                            type="button"
+                            className="btn btn-link p-0 text-decoration-none text-primary fw-semibold"
+                            onClick={() =>
+                                alert("Forgot password functionality not implemented yet")
+                            }
+                        >
+                            Forgot password?
+                        </button>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary w-100 py-2 fw-semibold"
+                    >
                         Login
                     </button>
                 </form>
-                
-                <div className="auth-divider">or</div>
-                
+
+                <div className="text-center text-muted my-4">
+                    <span>or</span>
+                </div>
+
                 <button
                     onClick={() => navigate("/register")}
-                    className="auth-button auth-button-secondary"
+                    className="btn btn-outline-secondary w-100 py-2 fw-semibold"
                 >
                     Create New Account
                 </button>
