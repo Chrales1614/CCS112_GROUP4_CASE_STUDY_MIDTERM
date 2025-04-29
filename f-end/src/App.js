@@ -1,4 +1,3 @@
-// f-end/src/App.js
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navigation from './components/layout/Navigation';
@@ -11,6 +10,7 @@ import ProjectDetail from './components/projects/ProjectDetail';
 import TaskList from './components/tasks/TaskList';
 import TaskForm from './components/tasks/TaskForm';
 import TaskDetail from './components/tasks/TaskDetail';
+import AllTasks from './components/tasks/AllTasks';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,12 +68,13 @@ function App() {
             element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/projects/:projectId/tasks/create" 
+            path="/tasks/create" 
             element={isAuthenticated ? <TaskForm /> : <Navigate to="/login" />} 
           />
+
           <Route 
             path="/tasks" 
-            element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <AllTasks /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/tasks/:taskId" 

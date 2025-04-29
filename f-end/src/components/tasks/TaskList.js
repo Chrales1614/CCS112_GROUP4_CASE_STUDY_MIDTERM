@@ -10,36 +10,51 @@ const TaskList = () => {
   const [project, setProject] = useState(null);
   
   useEffect(() => {
+    console.log('TaskList useEffect triggered with projectId:', projectId);
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('Token:', token);
         const headers = {
           Authorization: `Bearer ${token}`,
         };
         
-        // Fetch tasks for the specific project
+        // Fetch tasks for the specific project with timeout
         const tasksResponse = await axios.get(
           `http://localhost:8000/api/projects/${projectId}/tasks`,
-          { headers }
+          { headers, timeout: 10000 }
         );
+        console.log('Tasks response:', tasksResponse.data);
         
-        // Fetch project details
+        // Fetch project details with timeout
         const projectResponse = await axios.get(
           `http://localhost:8000/api/projects/${projectId}`,
-          { headers }
+          { headers, timeout: 10000 }
         );
+        console.log('Project response:', projectResponse.data);
         
         setTasks(tasksResponse.data.tasks);
         setProject(projectResponse.data.project);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch tasks');
+        console.error('Error fetching tasks or project:', err);
+        if (err.code === 'ECONNABORTED') {
+          setError('Request timed out. Please try again.');
+        } else if (err.response) {
+          setError(`Failed to fetch tasks: ${err.response.status} ${err.response.statusText}`);
+        } else {
+          setError('Failed to fetch tasks. Please check your network connection.');
+        }
         setLoading(false);
       }
     };
     
     if (projectId) {
       fetchData();
+    } else {
+      console.warn('No projectId provided');
+      setLoading(false);
+      setError('No project ID provided');
     }
   }, [projectId]);
   
@@ -52,15 +67,23 @@ const TaskList = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        timeout: 10000,
       });
       
       // Update the task list after deletion
       setTasks(tasks.filter(task => task.id !== taskId));
     } catch (err) {
-      setError('Failed to delete task');
+      if (err.code === 'ECONNABORTED') {
+        setError('Delete request timed out. Please try again.');
+      } else if (err.response) {
+        setError(`Failed to delete task: ${err.response.status} ${err.response.statusText}`);
+      } else {
+        setError('Failed to delete task. Please check your network connection.');
+      }
     }
   };
   
+  console.log('Rendering TaskList with loading:', loading, 'error:', error);
   if (loading) return <div>Loading tasks...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
   
