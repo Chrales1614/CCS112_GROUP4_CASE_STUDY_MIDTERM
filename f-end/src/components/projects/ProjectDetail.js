@@ -71,8 +71,16 @@ const ProjectDetail = () => {
     review: tasks.filter(task => task.status === 'review').length,
   };
   
-  const completionPercentage = taskStats.total > 0 
-    ? Math.round((taskStats.completed / taskStats.total) * 100) 
+  // Calculate weighted completion percentage considering task statuses
+  const completionPercentage = taskStats.total > 0
+    ? Math.round(
+        (
+          (taskStats.completed * 1.0) + 
+          (taskStats.review * 0.75) + 
+          (taskStats.inProgress * 0.5) + 
+          (taskStats.todo * 0)
+        ) / taskStats.total * 100
+      )
     : 0;
     
   return (
@@ -119,16 +127,16 @@ const ProjectDetail = () => {
             <div className="card-header">Project Progress</div>
             <div className="card-body">
               <div className="progress mb-3">
-                <div 
-                  className="progress-bar" 
-                  role="progressbar" 
-                  style={{ width: `${completionPercentage}%` }}
-                  aria-valuenow={completionPercentage}
-                  aria-valuemin="0" 
-                  aria-valuemax="100"
-                >
-                  {completionPercentage}%
-                </div>
+              <div 
+                className="progress-bar" 
+                role="progressbar" 
+                style={{ width: `${completionPercentage}%`, transition: 'width 0.5s ease-in-out' }}
+                aria-valuenow={completionPercentage}
+                aria-valuemin="0" 
+                aria-valuemax="100"
+              >
+                {completionPercentage}%
+              </div>
               </div>
               
               <div className="task-stats">
