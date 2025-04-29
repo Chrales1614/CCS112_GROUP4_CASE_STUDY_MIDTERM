@@ -107,7 +107,12 @@ const TaskForm = () => {
         },
       });
       
-      navigate(`/projects/${formData.project_id}/tasks`);
+      if (projectId) {
+        navigate(`/projects/${formData.project_id}/tasks`);
+      } else {
+        navigate('/tasks');
+      }
+      
     } catch (err) {
       setError('Failed to save task');
     }

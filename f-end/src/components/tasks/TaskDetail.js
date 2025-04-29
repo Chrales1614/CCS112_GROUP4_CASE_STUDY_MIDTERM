@@ -12,14 +12,17 @@ const TaskDetail = () => {
   useEffect(() => {
     const fetchTaskDetails = async () => {
       try {
+        console.log('Fetching task details for taskId:', taskId);
         const token = localStorage.getItem('token');
+        console.log('Token:', token);
         const response = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
+        console.log('Response data:', response.data);
         setTask(response.data.task);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching task details:', err);
         setError('Failed to fetch task details');
         setLoading(false);
       }

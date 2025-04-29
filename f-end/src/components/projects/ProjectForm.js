@@ -13,6 +13,8 @@ const ProjectForm = () => {
     start_date: '',
     end_date: '',
     status: 'planning',
+    budget: '',
+    actual_expenditure: '',
   });
   
   const [loading, setLoading] = useState(isEditing);
@@ -36,6 +38,8 @@ const ProjectForm = () => {
             start_date: project.start_date ? project.start_date.split('T')[0] : '',
             end_date: project.end_date ? project.end_date.split('T')[0] : '',
             status: project.status,
+            budget: project.budget !== null ? project.budget.toString() : '',
+            actual_expenditure: project.actual_expenditure !== null ? project.actual_expenditure.toString() : '',
           });
           setLoading(false);
         } catch (err) {
@@ -66,7 +70,11 @@ const ProjectForm = () => {
       await axios({
         method,
         url,
-        data: formData,
+        data: {
+          ...formData,
+          budget: formData.budget === '' ? null : parseFloat(formData.budget),
+          actual_expenditure: formData.actual_expenditure === '' ? null : parseFloat(formData.actual_expenditure),
+        },
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -161,6 +169,32 @@ const ProjectForm = () => {
           </select>
         </div>
         
+        <div className="mb-3">
+          <label htmlFor="budget" className="form-label">Budget</label>
+          <input
+            type="number"
+            className="form-control"
+            id="budget"
+            name="budget"
+            value={formData.budget}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+          />
+        </div>
+        <div className="mb-3">
+          <label htmlFor="actual_expenditure" className="form-label">Actual Expenditure</label>
+          <input
+            type="number"
+            className="form-control"
+            id="actual_expenditure"
+            name="actual_expenditure"
+            value={formData.actual_expenditure}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+          />
+        </div>
         <div className="d-flex gap-2">
           <button type="submit" className="btn btn-primary">
             {isEditing ? 'Update Project' : 'Create Project'}
