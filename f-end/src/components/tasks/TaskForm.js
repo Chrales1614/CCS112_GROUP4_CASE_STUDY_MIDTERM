@@ -19,51 +19,70 @@ const TaskForm = () => {
   
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingTask, setLoadingTask] = useState(isEditing);
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('token');
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-        
-        // Fetch users for assignment
+        const headers = { Authorization: `Bearer ${token}` };
         const usersResponse = await axios.get('http://localhost:8000/api/users', { headers });
         setUsers(usersResponse.data.users);
-        
-        // Fetch projects for dropdown
-        const projectsResponse = await axios.get('http://localhost:8000/api/projects', { headers });
-        setProjects(projectsResponse.data.projects);
-        
-        // If editing, fetch task details
-        if (isEditing) {
-          const taskResponse = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, { headers });
-          const task = taskResponse.data.task;
-          
-          setFormData({
-            title: task.title,
-            description: task.description || '',
-            project_id: task.project_id,
-            assigned_to: task.assigned_to || '',
-            status: task.status,
-            priority: task.priority,
-            due_date: task.due_date ? task.due_date.split('T')[0] : '',
-          });
-        }
-        
-        setLoading(false);
       } catch (err) {
-        setError('Failed to load form data');
-        setLoading(false);
+        setError('Failed to load users');
+      } finally {
+        setLoadingUsers(false);
       }
     };
-    
-    fetchData();
-  }, [taskId, projectId, isEditing]);
-  
+
+    const fetchProjects = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const projectsResponse = await axios.get('http://localhost:8000/api/projects', { headers });
+        setProjects(projectsResponse.data.projects);
+      } catch (err) {
+        setError('Failed to load projects');
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    fetchUsers();
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const fetchTask = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const taskResponse = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, { headers });
+        const task = taskResponse.data.task;
+        setFormData({
+          title: task.title,
+          description: task.description || '',
+          project_id: task.project_id,
+          assigned_to: task.assigned_to || '',
+          status: task.status,
+          priority: task.priority,
+          due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        });
+      } catch (err) {
+        setError('Failed to load task');
+      } finally {
+        setLoadingTask(false);
+      }
+    };
+
+    fetchTask();
+  }, [isEditing, taskId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -88,15 +107,14 @@ const TaskForm = () => {
         },
       });
       
-      // Navigate back to the project's task list
       navigate(`/projects/${formData.project_id}/tasks`);
     } catch (err) {
       setError('Failed to save task');
     }
   };
-  
-  if (loading) return <div>Loading...</div>;
-  
+
+  if (loadingUsers || loadingProjects || loadingTask) return <div>Loading...</div>;
+
   return (
     <div className="task-form">
       <h2>{isEditing ? 'Edit Task' : 'Create New Task'}</h2>
@@ -138,14 +156,18 @@ const TaskForm = () => {
             value={formData.project_id}
             onChange={handleChange}
             required
-            disabled={!!projectId} // Disable if project ID is passed in URL
+            disabled={!!projectId}
           >
             <option value="">Select Project</option>
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
+            {loadingProjects ? (
+              <option disabled>Loading projects...</option>
+            ) : (
+              projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
         
@@ -196,11 +218,15 @@ const TaskForm = () => {
               onChange={handleChange}
             >
               <option value="">Unassigned</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
+              {loadingUsers ? (
+                <option disabled>Loading users...</option>
+              ) : (
+                users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
           

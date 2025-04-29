@@ -10,40 +10,47 @@ const ProjectGanttChart = ({ tasks }) => {
     return <div>No valid tasks to display</div>;
   }
 
-  // Filter and map tasks with strict validation
-  const ganttTasks = tasks.reduce((acc, task) => {
+  // Filter and map tasks with improved date handling
+  const ganttTasks = tasks.map(task => {
     if (!task) {
       console.warn('Skipping falsy task:', task);
-      return acc;
+      return null;
     }
+
+    console.log('Task dates:', { created_at: task.created_at, due_date: task.due_date });
 
     let startDate = new Date();
-    if (task.due_date) {
-      const parsedDate = new Date(task.due_date);
-      if (!isNaN(parsedDate)) {
-        startDate = parsedDate;
+    if (task.created_at) {
+      const parsedCreatedAt = new Date(task.created_at);
+      if (!isNaN(parsedCreatedAt)) {
+        startDate = parsedCreatedAt;
       } else {
-        console.warn('Invalid due_date for task:', task);
-        return acc; // skip task with invalid date
+        console.warn('Invalid created_at for task:', task);
       }
     } else {
-      console.warn('Missing due_date for task:', task);
-      return acc; // skip task without due_date
+      console.warn('Missing created_at for task:', task);
     }
 
-    const ganttTask = {
+    let endDate = startDate;
+    if (task.due_date) {
+      const parsedDueDate = new Date(task.due_date);
+      if (!isNaN(parsedDueDate)) {
+        endDate = parsedDueDate;
+      } else {
+        console.warn('Invalid due_date for task:', task);
+      }
+    }
+
+    return {
       start: startDate,
-      end: startDate,
+      end: endDate,
       name: task.title || 'Untitled Task',
       id: task.id ? task.id.toString() : Math.random().toString(36).substr(2, 9),
       type: 'task',
       progress: task.status === 'completed' ? 100 : 0,
       isDisabled: true,
     };
-
-    acc.push(ganttTask);
-    return acc;
-  }, []);
+  }).filter(task => task !== null);
 
   console.log('Mapped ganttTasks:', ganttTasks);
 

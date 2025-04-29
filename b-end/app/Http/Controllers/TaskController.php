@@ -49,7 +49,27 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        return response()->json(['task' => $task->load('project', 'assignedUser')]);
+        $task->load('project', 'assignedUser');
+        $transformedTask = [
+            'id' => $task->id,
+            'title' => $task->title,
+            'description' => $task->description,
+            'project_id' => $task->project_id,
+            'assigned_to' => $task->assigned_to,
+            'status' => $task->status,
+            'priority' => $task->priority,
+            'due_date' => $task->due_date,
+            'created_at' => $task->created_at,
+            'assignedUser' => $task->assignedUser ? [
+                'id' => $task->assignedUser->id,
+                'name' => $task->assignedUser->name,
+            ] : null,
+            'project' => $task->project ? [
+                'id' => $task->project->id,
+                'name' => $task->project->name,
+            ] : null,
+        ];
+        return response()->json(['task' => $transformedTask]);
     }
 
     public function update(Request $request, Task $task)
