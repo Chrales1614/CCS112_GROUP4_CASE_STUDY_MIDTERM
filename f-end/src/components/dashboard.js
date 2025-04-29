@@ -74,6 +74,32 @@ const Dashboard = ({ onLogout }) => {
           </button>
         </div>
       </header>
+
+      <div className="row">
+        <div className="col-md-12">
+          <div className="card">
+            <div className="card-header">
+              <h5 className="mb-0">Quick Actions</h5>
+            </div>
+            <div className="card-body">
+              <div className="d-flex gap-3">
+                <Link to="/projects/create" className="btn btn-outline-primary">
+                  New Project
+                </Link>
+                <Link to="/tasks/create" className="btn btn-outline-success">
+                  New Task
+                </Link>
+                <Link to="/projects" className="btn btn-outline-info">
+                  Manage Projects
+                </Link>
+                <Link to="/tasks" className="btn btn-outline-secondary">
+                  Manage Tasks
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="row mb-4">
         <div className="col-md-6 mb-3">
@@ -156,31 +182,7 @@ const Dashboard = ({ onLogout }) => {
         </div>
       </div>
       
-      <div className="row">
-        <div className="col-md-12">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">Quick Actions</h5>
-            </div>
-            <div className="card-body">
-              <div className="d-flex gap-3">
-                <Link to="/projects/create" className="btn btn-outline-primary">
-                  New Project
-                </Link>
-                <Link to="/tasks/create" className="btn btn-outline-success">
-                  New Task
-                </Link>
-                <Link to="/projects" className="btn btn-outline-info">
-                  Manage Projects
-                </Link>
-                <Link to="/tasks" className="btn btn-outline-secondary">
-                  Manage Tasks
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ProjectGanttChart from './ProjectGanttChart';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -160,7 +161,14 @@ const ProjectDetail = () => {
           </div>
         </div>
       </div>
-      
+
+      <div className="card mt-4">
+        <div className="card-header">Gantt Chart Visualization</div>
+        <div className="card-body">
+          <ProjectGanttChart tasks={tasks} />
+        </div>
+      </div>
+
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Tasks</h5>

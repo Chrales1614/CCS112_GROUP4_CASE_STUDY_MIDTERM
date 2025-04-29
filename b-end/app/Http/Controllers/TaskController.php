@@ -38,6 +38,8 @@ class TaskController extends Controller
             'status' => 'required|string|in:todo,in_progress,review,completed',
             'priority' => 'required|string|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
+            'time_estimated' => 'nullable|numeric',
+            'time_spent' => 'nullable|numeric',
         ]);
 
         $task = Task::create($validated);
@@ -79,7 +81,25 @@ class TaskController extends Controller
         $tasks = Task::where('project_id', $projectId)
                     ->with(['assignedUser'])
                     ->get();
-                    
-        return response()->json(['tasks' => $tasks]);
+
+        // Transform tasks to ensure assignedUser is included properly
+        $transformedTasks = $tasks->map(function ($task) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'project_id' => $task->project_id,
+                'assigned_to' => $task->assigned_to,
+                'status' => $task->status,
+                'priority' => $task->priority,
+                'due_date' => $task->due_date,
+                'assignedUser' => $task->assignedUser ? [
+                    'id' => $task->assignedUser->id,
+                    'name' => $task->assignedUser->name,
+                ] : null,
+            ];
+        });
+
+        return response()->json(['tasks' => $transformedTasks]);
     }
 }

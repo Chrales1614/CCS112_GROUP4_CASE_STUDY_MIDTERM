@@ -48,6 +48,9 @@ class ProjectController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|string|in:planning,active,completed,on_hold',
+            'budget' => 'nullable|numeric',
+            'actual_expenditure' => 'nullable|numeric',
+            'progress' => 'nullable|integer|min:0|max:100',
         ]);
 
         $project->update($validated);

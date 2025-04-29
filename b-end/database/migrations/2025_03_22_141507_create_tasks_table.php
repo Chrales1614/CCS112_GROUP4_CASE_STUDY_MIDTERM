@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('status')->default('todo');
             $table->string('priority')->default('medium');
             $table->date('due_date')->nullable();
+            // New columns for Sprint 3 features
+            $table->float('time_estimated')->nullable();
+            $table->float('time_spent')->nullable();
             $table->timestamps();
         });
     }
