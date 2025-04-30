@@ -15,7 +15,12 @@ const AllTasks = () => {
           Authorization: `Bearer ${token}`,
         };
         const response = await axios.get('http://localhost:8000/api/tasks', { headers, timeout: 10000 });
-        setTasks(response.data.tasks);
+        // Ensure assignedUser is defined for each task to avoid showing "Unassigned" incorrectly
+        const tasksWithAssignedUser = response.data.tasks.map(task => ({
+          ...task,
+          assignedUser: task.assignedUser || null,
+        }));
+        setTasks(tasksWithAssignedUser);
         setLoading(false);
       } catch (err) {
         if (err.code === 'ECONNABORTED') {
@@ -38,8 +43,8 @@ const AllTasks = () => {
   return (
     
     <div className="all-tasks">
-      <h2>All Tasks</h2>
-      <div className="mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="mb-0">All Tasks</h2>
         <Link to="/tasks/create" className="btn btn-primary">
           Add New Task
         </Link>
@@ -47,7 +52,7 @@ const AllTasks = () => {
       {tasks.length === 0 ? (
         <p>No tasks found.</p>
       ) : (
-        <div className="table-responsive">
+        <div className="table-responsive"><br></br>
           <table className="table table-hover">
             <thead className="table-light">
               <tr>

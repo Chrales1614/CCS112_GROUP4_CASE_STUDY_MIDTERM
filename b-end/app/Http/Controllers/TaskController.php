@@ -25,7 +25,29 @@ class TaskController extends Controller
         }
         
         $tasks = $query->with(['project', 'assignedUser'])->get();
-        return response()->json(['tasks' => $tasks]);
+
+        $transformedTasks = $tasks->map(function ($task) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'project_id' => $task->project_id,
+                'assigned_to' => $task->assigned_to,
+                'status' => $task->status,
+                'priority' => $task->priority,
+                'due_date' => $task->due_date,
+                'assignedUser' => $task->assignedUser ? [
+                    'id' => $task->assignedUser->id,
+                    'name' => $task->assignedUser->name,
+                ] : null,
+                'project' => $task->project ? [
+                    'id' => $task->project->id,
+                    'name' => $task->project->name,
+                ] : null,
+            ];
+        });
+
+        return response()->json(['tasks' => $transformedTasks]);
     }
 
     public function store(Request $request)

@@ -6,7 +6,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Dashboard = ({ onLogout }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +21,6 @@ const Dashboard = ({ onLogout }) => {
         }
         
         const headers = { Authorization: `Bearer ${token}` };
-        
-        // Fetch user profile
-        const userResponse = await axios.get('http://localhost:8000/api/user', { headers });
-        setUser(userResponse.data);
         
         // Fetch recent projects
         const projectsResponse = await axios.get('http://localhost:8000/api/projects?limit=5', { headers });
@@ -45,23 +40,6 @@ const Dashboard = ({ onLogout }) => {
     fetchDashboardData();
   }, [navigate]);
   
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:8000/api/logout', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      localStorage.removeItem('token');
-      onLogout();
-      navigate('/login');
-    } catch (err) {
-      setError('Logout failed');
-    }
-  };
-  
   if (loading) return <div>Loading dashboard...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
   
@@ -69,12 +47,6 @@ const Dashboard = ({ onLogout }) => {
     <div className="dashboard container py-4">
       <header className="d-flex justify-content-between align-items-center mb-4">
         <h1>Project Management System</h1>
-        <div className="user-actions">
-          <span className="me-3">Welcome, {user?.name}</span>
-          <button onClick={handleLogout} className="btn btn-outline-danger">
-            Logout
-          </button>
-        </div>
       </header>
 
       <div className="row">

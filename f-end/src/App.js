@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navigation from './components/layout/Navigation';
 import Dashboard from './components/dashboard';
@@ -12,29 +12,41 @@ import TaskForm from './components/tasks/TaskForm';
 import TaskDetail from './components/tasks/TaskDetail';
 import AllTasks from './components/tasks/AllTasks';
 
+function AppWrapper() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const location = useLocation();
+
   useEffect(() => {
     // Check if user is authenticated
     const token = localStorage.getItem('token');
     setIsAuthenticated(!!token);
   }, []);
-  
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
   };
-  
+
   const handleLogin = (token) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
   };
-  
+
+  // Define paths where Navigation should be shown
+  const showNavigationPaths = ['/', '/projects', '/projects/create', '/tasks', '/tasks/create'];
+  const shouldShowNavigation = isAuthenticated && showNavigationPaths.some(path => location.pathname === path || location.pathname.startsWith(path + '/'));
+
   return (
-    <Router>
-      <div className="App">
-      {isAuthenticated && <Navigation />}
+    <div className="App">
+      {shouldShowNavigation && <Navigation onLogout={handleLogout} />}
       <div className="container py-4">
         <Routes>
           <Route 
@@ -88,10 +100,9 @@ function App() {
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-        </div>
       </div>
-    </Router>
+    </div>
   );
 }
 
-export default App;
+export default AppWrapper;
