@@ -25,7 +25,8 @@ class ProjectController extends Controller
             'actual_expenditure' => 'nullable|numeric',
         ]);
 
-        // Validate that actual_expenditure does not exceed budget
+        // Validate that actual_expenditure does not exceed budget if provided
+        // This check is only necessary if both fields are provided
         if (isset($validated['budget'], $validated['actual_expenditure']) && $validated['actual_expenditure'] > $validated['budget']) {
             return response()->json(['message' => 'Actual Expenditure cannot exceed the Budget.'], 422);
         }

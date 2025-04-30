@@ -124,7 +124,7 @@ class TaskController extends Controller
                     ->with(['assignedUser'])
                     ->get();
 
-        // Transform tasks to ensure assignedUser is included properly
+        // Transform tasks to ensure assignedUser is included properly.
         $transformedTasks = $tasks->map(function ($task) {
             return [
                 'id' => $task->id,

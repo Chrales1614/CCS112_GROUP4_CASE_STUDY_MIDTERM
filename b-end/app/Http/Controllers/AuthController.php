@@ -39,7 +39,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Login a user
+     * Login an user account
      */
     public function login(Request $request)
     {
@@ -63,7 +63,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout a user
+     * Logout an user account
      */
     public function logout(Request $request)
     {
