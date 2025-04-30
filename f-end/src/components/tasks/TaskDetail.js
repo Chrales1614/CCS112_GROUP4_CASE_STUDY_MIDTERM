@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+//this is for task details
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();

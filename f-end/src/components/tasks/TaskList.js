@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 
+//this is for task list
+// This component fetches and displays a list of tasks for a specific project
 const TaskList = () => {
   const { projectId } = useParams();
   const [tasks, setTasks] = useState([]);
