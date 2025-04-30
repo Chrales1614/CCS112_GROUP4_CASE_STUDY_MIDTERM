@@ -20,12 +20,12 @@ const Login = ({ onLogin }) => {
 
             const data = await response.json();
 
-            if (response.ok) {
-                onLogin(data.token);
-                navigate("/dashboard");
-            } else {
-                setError(data.message || "Login failed");
-            }
+                if (response.ok) {
+                    onLogin(data.token);
+                    navigate("/");
+                } else {
+                    setError(data.message || "Login failed");
+                }
         } catch (error) {
             setError("Server error");
         }

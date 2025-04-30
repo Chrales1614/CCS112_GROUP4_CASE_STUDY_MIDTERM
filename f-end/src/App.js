@@ -25,9 +25,31 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    // Check if user is authenticated by validating token
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
+      try {
+        const response = await fetch('http://localhost:8000/api/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+      }
+    };
+    validateToken();
   }, []);
 
   const handleLogout = () => {

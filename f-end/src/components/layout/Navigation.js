@@ -20,6 +20,8 @@ const Navigation = ({ onLogout }) => {
         const userResponse = await axios.get('http://localhost:8000/api/user', { headers });
         setUser(userResponse.data);
       } catch (err) {
+        localStorage.removeItem('token');
+        navigate('/login');
         setError('Failed to fetch user data');
       }
     };

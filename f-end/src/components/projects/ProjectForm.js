@@ -59,6 +59,15 @@ const ProjectForm = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Client-side validation: actual_expenditure should not exceed budget
+    const budgetValue = formData.budget === '' ? null : parseFloat(formData.budget);
+    const actualExpenditureValue = formData.actual_expenditure === '' ? null : parseFloat(formData.actual_expenditure);
+
+    if (budgetValue !== null && actualExpenditureValue !== null && actualExpenditureValue > budgetValue) {
+      setError('Actual Expenditure cannot exceed the Budget.');
+      return;
+    }
     
     try {
       const token = localStorage.getItem('token');
@@ -72,8 +81,8 @@ const ProjectForm = () => {
         url,
         data: {
           ...formData,
-          budget: formData.budget === '' ? null : parseFloat(formData.budget),
-          actual_expenditure: formData.actual_expenditure === '' ? null : parseFloat(formData.actual_expenditure),
+          budget: budgetValue,
+          actual_expenditure: actualExpenditureValue,
         },
         headers: {
           Authorization: `Bearer ${token}`,
