@@ -20,7 +20,14 @@ const ProjectGanttChart = ({ tasks }) => {
     console.log('Task dates:', { created_at: task.created_at, due_date: task.due_date });
 
     let startDate = new Date();
-    if (task.created_at) {
+    if (task.start_date) {
+      const parsedStartDate = new Date(task.start_date);
+      if (!isNaN(parsedStartDate)) {
+        startDate = parsedStartDate;
+      } else {
+        console.warn('Invalid start_date for task:', task);
+      }
+    } else if (task.created_at) {
       const parsedCreatedAt = new Date(task.created_at);
       if (!isNaN(parsedCreatedAt)) {
         startDate = parsedCreatedAt;
@@ -28,10 +35,10 @@ const ProjectGanttChart = ({ tasks }) => {
         console.warn('Invalid created_at for task:', task);
       }
     } else {
-      console.warn('Missing created_at for task:', task);
+      console.warn('Missing start_date and created_at for task:', task);
     }
 
-    let endDate = startDate;
+    let endDate = null;
     if (task.due_date) {
       const parsedDueDate = new Date(task.due_date);
       if (!isNaN(parsedDueDate)) {
@@ -39,6 +46,11 @@ const ProjectGanttChart = ({ tasks }) => {
       } else {
         console.warn('Invalid due_date for task:', task);
       }
+    }
+
+    // If endDate is missing or invalid, set it to startDate + 1 day
+    if (!endDate || endDate < startDate) {
+      endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // add 1 day
     }
 
     return {

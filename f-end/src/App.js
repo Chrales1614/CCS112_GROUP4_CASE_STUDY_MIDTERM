@@ -22,6 +22,7 @@ function AppWrapper() {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
@@ -30,6 +31,7 @@ function App() {
       const token = localStorage.getItem('token');
       if (!token) {
         setIsAuthenticated(false);
+        setLoading(false);
         return;
       }
       try {
@@ -47,6 +49,8 @@ function App() {
       } catch (error) {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
     };
     validateToken();
@@ -65,6 +69,11 @@ function App() {
   // Define paths where Navigation should be shown
   const showNavigationPaths = ['/', '/projects', '/projects/create', '/tasks', '/tasks/create'];
   const shouldShowNavigation = isAuthenticated && showNavigationPaths.some(path => location.pathname === path || location.pathname.startsWith(path + '/'));
+
+  if (loading) {
+    // Optionally, render a loading indicator or null while validating token
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="App">
@@ -100,6 +109,10 @@ function App() {
           <Route 
             path="/projects/:projectId/tasks" 
             element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/projects/:projectId/tasks/create" 
+            element={isAuthenticated ? <TaskForm /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/tasks/create" 

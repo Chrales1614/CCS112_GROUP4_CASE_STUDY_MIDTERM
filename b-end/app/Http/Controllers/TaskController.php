@@ -36,6 +36,7 @@ class TaskController extends Controller
                 'status' => $task->status,
                 'priority' => $task->priority,
                 'due_date' => $task->due_date,
+                'start_date' => $task->start_date,
                 'assignedUser' => $task->assignedUser ? [
                     'id' => $task->assignedUser->id,
                     'name' => $task->assignedUser->name,
@@ -60,6 +61,7 @@ class TaskController extends Controller
             'status' => 'required|string|in:todo,in_progress,review,completed',
             'priority' => 'required|string|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
             'time_estimated' => 'nullable|numeric',
             'time_spent' => 'nullable|numeric',
         ]);
@@ -81,6 +83,7 @@ class TaskController extends Controller
             'status' => $task->status,
             'priority' => $task->priority,
             'due_date' => $task->due_date,
+            'start_date' => $task->start_date,
             'created_at' => $task->created_at,
             'assignedUser' => $task->assignedUser ? [
                 'id' => $task->assignedUser->id,
@@ -104,6 +107,7 @@ class TaskController extends Controller
             'status' => 'required|string|in:todo,in_progress,review,completed',
             'priority' => 'required|string|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date',
         ]);
 
         $task->update($validated);
@@ -135,6 +139,7 @@ class TaskController extends Controller
                 'status' => $task->status,
                 'priority' => $task->priority,
                 'due_date' => $task->due_date,
+                'start_date' => $task->start_date,
                 'assignedUser' => $task->assignedUser ? [
                     'id' => $task->assignedUser->id,
                     'name' => $task->assignedUser->name,

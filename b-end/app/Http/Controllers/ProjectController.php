@@ -21,14 +21,21 @@ class ProjectController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|string|in:planning,active,completed,on_hold',
-            'budget' => 'nullable|numeric',
+            'budget' => 'nullable|array',
+            'budget.*.item' => 'required_with:budget|string',
+            'budget.*.amount' => 'required_with:budget|numeric|min:0',
             'actual_expenditure' => 'nullable|numeric',
         ]);
 
-        // Validate that actual_expenditure does not exceed budget if provided
-        // This check is only necessary if both fields are provided
-        if (isset($validated['budget'], $validated['actual_expenditure']) && $validated['actual_expenditure'] > $validated['budget']) {
-            return response()->json(['message' => 'Actual Expenditure cannot exceed the Budget.'], 422);
+        // Validate that actual_expenditure does not exceed total budget if provided
+        if (isset($validated['budget'], $validated['actual_expenditure'])) {
+            $totalBudget = array_sum(array_column($validated['budget'], 'amount'));
+            if ($validated['actual_expenditure'] > $totalBudget) {
+                return response()->json(['message' => 'Actual Expenditure cannot exceed the total Budget.'], 422);
+            }
+            if ($totalBudget < $validated['actual_expenditure']) {
+                return response()->json(['message' => 'Total Budget cannot be less than Actual Expenditure.'], 422);
+            }
         }
 
         $project = Project::create([
@@ -58,14 +65,19 @@ class ProjectController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|string|in:planning,active,completed,on_hold',
-            'budget' => 'nullable|numeric',
+            'budget' => 'nullable|array',
+            'budget.*.item' => 'required_with:budget|string',
+            'budget.*.amount' => 'required_with:budget|numeric|min:0',
             'actual_expenditure' => 'nullable|numeric',
             'progress' => 'nullable|integer|min:0|max:100',
         ]);
 
-        // Validate that actual_expenditure does not exceed budget
-        if (isset($validated['budget'], $validated['actual_expenditure']) && $validated['actual_expenditure'] > $validated['budget']) {
-            return response()->json(['message' => 'Actual Expenditure cannot exceed the Budget.'], 422);
+        // Validate that actual_expenditure does not exceed total budget
+        if (isset($validated['budget'], $validated['actual_expenditure'])) {
+            $totalBudget = array_sum(array_column($validated['budget'], 'amount'));
+            if ($validated['actual_expenditure'] > $totalBudget) {
+                return response()->json(['message' => 'Actual Expenditure cannot exceed the total Budget.'], 422);
+            }
         }
 
         $project->update($validated);

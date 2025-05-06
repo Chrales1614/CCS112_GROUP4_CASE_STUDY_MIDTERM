@@ -15,6 +15,7 @@ const TaskForm = () => {
     status: 'todo',
     priority: 'medium',
     due_date: '',
+    start_date: '',
   });
   
   const [users, setUsers] = useState([]);
@@ -72,6 +73,7 @@ const TaskForm = () => {
           status: task.status,
           priority: task.priority,
           due_date: task.due_date ? task.due_date.split('T')[0] : '',
+          start_date: task.start_date ? task.start_date.split('T')[0] : '',
         });
       } catch (err) {
         setError('Failed to load task');
@@ -243,6 +245,17 @@ const TaskForm = () => {
               id="due_date"
               name="due_date"
               value={formData.due_date}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="col">
+            <label htmlFor="start_date" className="form-label">Start Date</label>
+            <input
+              type="date"
+              className="form-control"
+              id="start_date"
+              name="start_date"
+              value={formData.start_date}
               onChange={handleChange}
             />
           </div>

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class ChangeBudgetColumnTypeToJson extends Migration
 {
     /**
      * Run the migrations.
@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('projects', function (Blueprint $table) {
-            $table->json('budget')->nullable()->after('status');
-            $table->decimal('actual_expenditure', 15, 2)->nullable()->after('budget');
+            // Change budget column type to JSON nullable
+            $table->json('budget')->nullable()->change();
         });
     }
 
@@ -23,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('projects', function (Blueprint $table) {
-            $table->dropColumn(['budget', 'actual_expenditure']);
+            // Revert budget column type back to decimal
+            $table->decimal('budget', 15, 2)->nullable()->change();
         });
     }
-};
+}
