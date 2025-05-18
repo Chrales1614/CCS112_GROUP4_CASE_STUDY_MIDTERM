@@ -19,6 +19,7 @@ const ProjectForm = () => {
 
   const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState(null);
+  const [budgetStatus, setBudgetStatus] = useState({ remaining: 0, percentage: 0, isValid: true });
 
   useEffect(() => {
     if (isEditing) {
@@ -51,6 +52,20 @@ const ProjectForm = () => {
       fetchProject();
     }
   }, [id, isEditing]);
+
+  useEffect(() => {
+    // Calculate initial budget status
+    const totalBudget = formData.budget.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+    const actualExpenditureValue = formData.actual_expenditure === '' ? 0 : parseFloat(formData.actual_expenditure);
+    const remaining = totalBudget - actualExpenditureValue;
+    const percentage = totalBudget > 0 ? (actualExpenditureValue / totalBudget) * 100 : 0;
+    
+    setBudgetStatus({
+      remaining,
+      percentage,
+      isValid: actualExpenditureValue <= totalBudget
+    });
+  }, [formData.budget, formData.actual_expenditure]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -259,6 +274,27 @@ const ProjectForm = () => {
             step="0.01"
             min="0"
           />
+          <div className="form-text">
+            <div className="d-flex justify-content-between">
+              <span>Remaining Budget: ₱{budgetStatus.remaining?.toFixed(2)}</span>
+              <span>Budget Usage: {budgetStatus.percentage?.toFixed(1)}%</span>
+            </div>
+            <div className="progress mt-2" style={{ height: '5px' }}>
+              <div 
+                className={`progress-bar ${budgetStatus.percentage > 100 ? 'bg-danger' : 'bg-success'}`}
+                role="progressbar"
+                style={{ width: `${Math.min(budgetStatus.percentage, 100)}%` }}
+                aria-valuenow={budgetStatus.percentage}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              />
+            </div>
+          </div>
+          {!budgetStatus.isValid && (
+            <div className="invalid-feedback d-block">
+              Actual Expenditure cannot exceed the total Budget
+            </div>
+          )}
         </div>
         <div className="d-flex gap-2">
           <button type="submit" className="btn btn-primary">
