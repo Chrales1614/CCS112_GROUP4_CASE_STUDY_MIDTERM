@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
@@ -53,22 +56,54 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'project_id' => 'required|exists:projects,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'status' => 'required|string|in:todo,in_progress,review,completed',
-            'priority' => 'required|string|in:low,medium,high,urgent',
-            'due_date' => 'nullable|date',
-            'start_date' => 'nullable|date',
-            'time_estimated' => 'nullable|numeric',
-            'time_spent' => 'nullable|numeric',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'project_id' => 'required|exists:projects,id',
+                'assigned_to' => 'nullable|exists:users,id',
+                'status' => 'required|string|in:todo,in_progress,review,completed',
+                'priority' => 'required|string|in:low,medium,high,urgent',
+                'due_date' => 'nullable|date',
+                'start_date' => 'nullable|date',
+                'time_estimated' => 'nullable|numeric',
+                'time_spent' => 'nullable|numeric',
+            ]);
 
-        $task = Task::create($validated);
+            $task = Task::create($validated);
 
-        return response()->json(['task' => $task], 201);
+            // Get all admin users
+            $adminUsers = \App\Models\User::where('role', 'admin')
+                ->where('id', '!=', Auth::id())
+                ->get();
+
+            // Create notifications for admin users
+            foreach ($adminUsers as $admin) {
+                Notification::create([
+                    'type' => 'task_created',
+                    'message' => Auth::user()->name . ' created a new task: ' . $task->title,
+                    'user_id' => $admin->id,
+                    'project_id' => $task->project_id,
+                    'task_id' => $task->id
+                ]);
+            }
+
+            // Create notification for task assignment
+            if ($task->assigned_to && $task->assigned_to !== Auth::id()) {
+                Notification::create([
+                    'type' => 'task_assigned',
+                    'message' => Auth::user()->name . ' assigned you to task: ' . $task->title,
+                    'user_id' => $task->assigned_to,
+                    'project_id' => $task->project_id,
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return response()->json(['task' => $task], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create task: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create task', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function show(Task $task)
@@ -99,26 +134,112 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'project_id' => 'required|exists:projects,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'status' => 'required|string|in:todo,in_progress,review,completed',
-            'priority' => 'required|string|in:low,medium,high,urgent',
-            'due_date' => 'nullable|date',
-            'start_date' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'project_id' => 'required|exists:projects,id',
+                'assigned_to' => 'nullable|exists:users,id',
+                'status' => 'required|string|in:todo,in_progress,review,completed',
+                'priority' => 'required|string|in:low,medium,high,urgent',
+                'due_date' => 'nullable|date',
+                'start_date' => 'nullable|date',
+            ]);
 
-        $task->update($validated);
+            $oldStatus = $task->status;
+            $oldAssignedTo = $task->assigned_to;
 
-        return response()->json(['task' => $task]);
+            $task->update($validated);
+
+            // Get all admin users
+            $adminUsers = \App\Models\User::where('role', 'admin')
+                ->where('id', '!=', Auth::id())
+                ->get();
+
+            // Create notification for status change
+            if ($oldStatus !== $task->status) {
+                // Notify admin users about status change
+                foreach ($adminUsers as $admin) {
+                    Notification::create([
+                        'type' => 'task_status',
+                        'message' => Auth::user()->name . ' updated task status to ' . $task->status . ': ' . $task->title,
+                        'user_id' => $admin->id,
+                        'project_id' => $task->project_id,
+                        'task_id' => $task->id
+                    ]);
+                }
+
+                // Notify project members about status change
+                $projectMembers = $task->project->users()
+                    ->where('users.id', '!=', Auth::id())
+                    ->get();
+
+                foreach ($projectMembers as $member) {
+                    Notification::create([
+                        'type' => 'task_status',
+                        'message' => Auth::user()->name . ' updated task status to ' . $task->status . ': ' . $task->title,
+                        'user_id' => $member->id,
+                        'project_id' => $task->project_id,
+                        'task_id' => $task->id
+                    ]);
+                }
+            }
+
+            // Create notification for assignment change
+            if ($oldAssignedTo !== $task->assigned_to && $task->assigned_to && $task->assigned_to !== Auth::id()) {
+                // Notify admin users about assignment change
+                foreach ($adminUsers as $admin) {
+                    Notification::create([
+                        'type' => 'task_assigned',
+                        'message' => Auth::user()->name . ' assigned task to ' . $task->assignedUser->name . ': ' . $task->title,
+                        'user_id' => $admin->id,
+                        'project_id' => $task->project_id,
+                        'task_id' => $task->id
+                    ]);
+                }
+
+                // Notify the assigned user
+                Notification::create([
+                    'type' => 'task_assigned',
+                    'message' => Auth::user()->name . ' assigned you to task: ' . $task->title,
+                    'user_id' => $task->assigned_to,
+                    'project_id' => $task->project_id,
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return response()->json(['task' => $task]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update task: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update task', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy(Task $task)
     {
-        $task->delete();
-        return response()->json(['message' => 'Task deleted successfully']);
+        try {
+            $task->delete();
+
+            // Notify project members about task deletion
+            $projectMembers = $task->project->users()
+                ->where('users.id', '!=', Auth::id())
+                ->get();
+
+            foreach ($projectMembers as $member) {
+                Notification::create([
+                    'type' => 'task_deleted',
+                    'message' => Auth::user()->name . ' deleted task: ' . $task->title,
+                    'user_id' => $member->id,
+                    'project_id' => $task->project_id,
+                    'task_id' => null
+                ]);
+            }
+
+            return response()->json(['message' => 'Task deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete task: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete task', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function getProjectTasks($projectId)

@@ -1,48 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../api/axiosConfig';
+import CommentSection from '../comments/CommentSection';
+import FileUpload from '../files/FileUpload';
+import './TaskDetail.css';
+
+const API_BASE_URL = 'http://localhost:8000/api';
 
 //this is for task details
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const [task, setTask] = useState(null);
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  useEffect(() => {
-    const fetchTaskDetails = async () => {
-      try {
-        console.log('Fetching task details for taskId:', taskId);
-        const token = localStorage.getItem('token');
-        console.log('Token:', token);
-        const response = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log('Response data:', response.data);
-        setTask(response.data.task);
+  const fetchTask = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('User not authenticated');
         setLoading(false);
-      } catch (err) {
-        console.error('Error fetching task details:', err);
-        setError('Failed to fetch task details');
-        setLoading(false);
+        return;
       }
-    };
-    
-    fetchTaskDetails();
+      const response = await axios.get(`${API_BASE_URL}/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTask(response.data.task);
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      setError('Failed to load task details');
+    } finally {
+      setLoading(false);
+    }
   }, [taskId]);
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/files?task_id=${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFiles(response.data);
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    }
+  }, [taskId]);
+  
+  useEffect(() => {
+    fetchTask();
+  }, [fetchTask]);
+  
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
   
   const handleStatusChange = async (newStatus) => {
     try {
+      setError(null);
       const token = localStorage.getItem('token');
-      await axios.put(
-        `http://localhost:8000/api/tasks/${taskId}`,
-        { ...task, status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      if (!token) {
+        setError('User not authenticated');
+        return;
+      }
+      // Send full task data for update
+      const response = await axios.put(
+        `${API_BASE_URL}/tasks/${taskId}`,
+        {
+          title: task.title,
+          description: task.description,
+          project_id: task.project_id,
+          assigned_to: task.assigned_to,
+          status: newStatus,
+          priority: task.priority,
+          due_date: task.due_date,
+          start_date: task.start_date,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
       );
-      
-      setTask({ ...task, status: newStatus });
-    } catch (err) {
+      setTask(response.data.task);
+    } catch (error) {
+      console.error('Error updating task status:', error);
       setError('Failed to update task status');
     }
   };
@@ -54,7 +97,7 @@ const TaskDetail = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/tasks/${taskId}`, {
+      await axios.delete(`${API_BASE_URL}/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -64,9 +107,25 @@ const TaskDetail = () => {
     }
   };
   
-  if (loading) return <div>Loading task details...</div>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
-  if (!task) return <div>Task not found</div>;
+  const handleFileUpload = (newFile) => {
+    setFiles([...files, newFile]);
+  };
+  
+  const handleFileDelete = async (fileId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE_URL}/files/${fileId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFiles(files.filter(file => file.id !== fileId));
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
+  };
+  
+  if (loading) return <div className="loading">Loading task details...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!task) return <div className="error">Task not found</div>;
   
   return (
     <div className="task-detail">
@@ -104,7 +163,7 @@ const TaskDetail = () => {
                   <p>
                     <strong>Status:</strong> {' '}
                     <span className={`badge bg-${getStatusBadge(task.status)}`}>
-                      {task.status.replace('_', ' ')}
+{task.status ? task.status.replace('_', ' ') : ''}
                     </span>
                   </p>
                   <p>
@@ -166,8 +225,44 @@ const TaskDetail = () => {
         </div>
         
         <div className="col-md-4">
-          {/* You can add additional task information or related features here */}
+          <div className="card">
+            <div className="card-header">Files</div>
+            <div className="card-body">
+              <FileUpload
+                taskId={task.id}
+                onUploadComplete={handleFileUpload}
+              />
+              <div className="files-list">
+                {files.map(file => (
+                  <div key={file.id} className="file-item">
+                    <div className="file-info">
+                      <span className="file-name">{file.name}</span>
+                      <span className="file-size">{file.formatted_size}</span>
+                    </div>
+                    <div className="file-actions">
+                      <a
+                        href={`http://localhost:8000/api/files/${file.id}/download`}
+                        className="download-button"
+                      >
+                        Download
+                      </a>
+                      <button
+                        onClick={() => handleFileDelete(file.id)}
+                        className="delete-button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+      
+      <div className="task-comments">
+        <CommentSection taskId={task.id} />
       </div>
     </div>
   );

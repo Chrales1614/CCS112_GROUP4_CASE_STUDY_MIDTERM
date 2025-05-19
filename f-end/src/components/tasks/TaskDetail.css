@@ -1,0 +1,154 @@
+.task-detail {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.task-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #333;
+}
+
+.task-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.edit-button {
+    padding: 0.5rem 1rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+    background-color: #357abd;
+}
+
+.task-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.status-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.priority-badge.high {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.priority-badge.medium {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.priority-badge.low {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.task-content {
+    display: grid;
+    gap: 2rem;
+}
+
+.task-description {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 6px;
+}
+
+.task-description h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.task-description p {
+    margin: 0;
+    line-height: 1.6;
+    color: #666;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.error {
+    text-align: center;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #ffebee;
+    color: #c62828;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .task-detail {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .task-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .task-meta {
+        grid-template-columns: 1fr;
+    }
+} 

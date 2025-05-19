@@ -48,4 +48,44 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function assignedTasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === self::ADMIN;
+    }
+
+    public function isProjectManager()
+    {
+        return $this->role === self::PROJECT_MANAGER;
+    }
+
+    public function isTeamMember()
+    {
+        return $this->role === self::TEAM_MEMBER;
+    }
+
+    public function isClient()
+    {
+        return $this->role === self::CLIENT;
+    }
 }

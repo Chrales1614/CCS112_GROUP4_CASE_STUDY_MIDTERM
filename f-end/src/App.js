@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import Navigation from './components/layout/Navigation';
 import Dashboard from './components/dashboard';
 import Login from './components/login';
@@ -11,125 +10,96 @@ import TaskList from './components/tasks/TaskList';
 import TaskForm from './components/tasks/TaskForm';
 import TaskDetail from './components/tasks/TaskDetail';
 import AllTasks from './components/tasks/AllTasks';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Reports from './components/Reports';
+import RiskTracker from './components/RiskTracker';
 
 function AppWrapper() {
   return (
     <Router>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </Router>
   );
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    // Check if user is authenticated by validating token
-    const validateToken = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setIsAuthenticated(false);
-        setLoading(false);
-        return;
-      }
-      try {
-        const response = await fetch('http://localhost:8000/api/user', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem('token');
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    validateToken();
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-  };
-
-  const handleLogin = (token) => {
-    localStorage.setItem('token', token);
-    setIsAuthenticated(true);
-  };
 
   // Define paths where Navigation should be shown
   const showNavigationPaths = ['/', '/projects', '/projects/create', '/tasks', '/tasks/create'];
-  const shouldShowNavigation = isAuthenticated && showNavigationPaths.some(path => location.pathname === path || location.pathname.startsWith(path + '/'));
+  const shouldShowNavigation = user && showNavigationPaths.some(path => location.pathname === path || location.pathname.startsWith(path + '/'));
 
   if (loading) {
-    // Optionally, render a loading indicator or null while validating token
-    return <div>Loading...</div>;
+    return <div className="container mt-5">Loading...</div>;
   }
 
   return (
     <div className="App">
-      {shouldShowNavigation && <Navigation onLogout={handleLogout} />}
+      {shouldShowNavigation && <Navigation />}
       <div className="container py-4">
         <Routes>
           <Route 
             path="/" 
-            element={isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <Navigate to="/login" />} 
+            element={user ? <Dashboard /> : <Navigate to="/login" />} 
           />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
           {/* Project routes */}
           <Route 
             path="/projects" 
-            element={isAuthenticated ? <ProjectList /> : <Navigate to="/login" />} 
+            element={user ? <ProjectList /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/projects/create" 
-            element={isAuthenticated ? <ProjectForm /> : <Navigate to="/login" />} 
+            element={user ? <ProjectForm /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/projects/:id" 
-            element={isAuthenticated ? <ProjectDetail /> : <Navigate to="/login" />} 
+            element={user ? <ProjectDetail /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/projects/:id/edit" 
-            element={isAuthenticated ? <ProjectForm /> : <Navigate to="/login" />} 
+            element={user ? <ProjectForm /> : <Navigate to="/login" />} 
           />
           
           {/* Task routes */}
           <Route 
             path="/projects/:projectId/tasks" 
-            element={isAuthenticated ? <TaskList /> : <Navigate to="/login" />} 
+            element={user ? <TaskList /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/projects/:projectId/tasks/create" 
-            element={isAuthenticated ? <TaskForm /> : <Navigate to="/login" />} 
+            element={user ? <TaskForm /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/tasks/create" 
-            element={isAuthenticated ? <TaskForm /> : <Navigate to="/login" />} 
+            element={user ? <TaskForm /> : <Navigate to="/login" />} 
           />
-
           <Route 
             path="/tasks" 
-            element={isAuthenticated ? <AllTasks /> : <Navigate to="/login" />} 
+            element={user ? <AllTasks /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/tasks/:taskId" 
-            element={isAuthenticated ? <TaskDetail /> : <Navigate to="/login" />} 
+            element={user ? <TaskDetail /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/tasks/:taskId/edit" 
-            element={isAuthenticated ? <TaskForm /> : <Navigate to="/login" />} 
+            element={user ? <TaskForm /> : <Navigate to="/login" />} 
+          />
+          
+          {/* Reports and Risk Tracker routes */}
+          <Route 
+            path="/reports" 
+            element={user ? <Reports /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/risks" 
+            element={user ? <RiskTracker /> : <Navigate to="/login" />} 
           />
           
           {/* Catch-all route */}

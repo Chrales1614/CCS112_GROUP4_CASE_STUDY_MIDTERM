@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../contexts/AuthContext';
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Registration = () => {
@@ -11,7 +12,9 @@ const Registration = () => {
     const [error, setError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [passwordStrength, setPasswordStrength] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { register } = useAuth();
 
     const handlePasswordChange = (e) => {
         const newPassword = e.target.value;
@@ -36,6 +39,7 @@ const Registration = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setError("");
 
         if (password.length < 8) {
             setError("Password must be at least 8 characters long");
@@ -47,28 +51,26 @@ const Registration = () => {
             return;
         }
 
+        setLoading(true);
+
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    password,
-                    password_confirmation: confirmPassword,
-                    role,
-                }),
+            const result = await register({
+                name,
+                email,
+                password,
+                password_confirmation: confirmPassword,
+                role
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (result.success) {
                 navigate("/");
             } else {
-                setError(data.message || "Registration failed");
+                setError(result.error);
             }
-        } catch (error) {
+        } catch (err) {
             setError("Registration failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -158,14 +160,18 @@ const Registration = () => {
                         </label>
                     </div>
 
-                    <button type="submit" className="btn btn-primary w-100 mb-3">
-                        Create Account
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary w-100 mb-3"
+                        disabled={loading}
+                    >
+                        {loading ? 'Creating Account...' : 'Create Account'}
                     </button>
                 </form>
 
                 <div className="text-center">
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/login")}
                         className="btn btn-outline-secondary w-100"
                     >
                         Back to Login

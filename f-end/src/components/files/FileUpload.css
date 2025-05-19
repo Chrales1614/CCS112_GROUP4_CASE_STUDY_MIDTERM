@@ -1,0 +1,138 @@
+.file-upload {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-upload h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.file-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.upload-section {
+    margin-bottom: 1.5rem;
+}
+
+.upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.upload-button:hover {
+    background-color: #0056b3;
+}
+
+.upload-button i {
+    font-size: 1.1rem;
+}
+
+.files-list {
+    margin-top: 1rem;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+}
+
+.file-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.file-info i {
+    color: #6c757d;
+    font-size: 1.2rem;
+}
+
+.file-name {
+    color: #333;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+.file-size {
+    color: #6c757d;
+    font-size: 0.8rem;
+    margin-left: auto;
+    padding-left: 1rem;
+}
+
+.file-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.download-button,
+.delete-button {
+    background: none;
+    border: none;
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.download-button {
+    color: #28a745;
+}
+
+.download-button:hover {
+    background-color: #e7f5ea;
+}
+
+.delete-button {
+    color: #dc3545;
+}
+
+.delete-button:hover {
+    background-color: #f8d7da;
+}
+
+.loading,
+.no-files {
+    text-align: center;
+    color: #6c757d;
+    padding: 1rem;
+    font-style: italic;
+} 
