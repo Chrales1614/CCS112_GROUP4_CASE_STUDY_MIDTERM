@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../api/axiosConfig';
-import './NotificationCenter.css';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -112,7 +111,6 @@ const NotificationCenter = () => {
                 prevNotifications.filter(n => n.id !== notificationId)
             );
 
-            // Update unread count if we deleted an unread notification
             const deletedNotification = notifications.find(n => n.id === notificationId);
             if (deletedNotification && !deletedNotification.read) {
                 setUnreadCount(prev => Math.max(0, prev - 1));
@@ -123,24 +121,21 @@ const NotificationCenter = () => {
         }
     };
 
-    // Initial fetch
     useEffect(() => {
         fetchNotifications();
         fetchUnreadCount();
     }, [fetchNotifications, fetchUnreadCount]);
 
-    // Set up polling for new notifications
     useEffect(() => {
         const pollInterval = setInterval(() => {
-            if (!isOpen) { // Only poll for new notifications when dropdown is closed
+            if (!isOpen) {
                 fetchUnreadCount();
             }
-        }, 30000); // Poll every 30 seconds
+        }, 30000);
 
         return () => clearInterval(pollInterval);
     }, [fetchUnreadCount, isOpen]);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (isOpen && !event.target.closest('.notification-center')) {
@@ -152,7 +147,6 @@ const NotificationCenter = () => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, [isOpen]);
 
-    // Refresh notifications when opening dropdown
     useEffect(() => {
         if (isOpen) {
             fetchNotifications();
@@ -181,73 +175,81 @@ const NotificationCenter = () => {
     };
 
     return (
-        <div className="notification-center">
+        <div className="relative">
             <button
-                className="notification-toggle"
+                className="relative p-2 text-white hover:bg-blue-500 rounded-full focus:outline-none"
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsOpen(!isOpen);
                 }}
                 title="Notifications"
             >
-                <i className="fas fa-bell"></i>
+                <i className="fas fa-bell text-lg"></i>
                 {unreadCount > 0 && (
-                    <span className="notification-badge">{unreadCount}</span>
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+                        {unreadCount}
+                    </span>
                 )}
             </button>
 
             {isOpen && (
-                <div className="notification-dropdown">
-                    <div className="notification-header">
-                        <h3>Notifications</h3>
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={handleMarkAllAsRead}
-                                className="mark-all-read"
-                            >
-                                Mark all as read
-                            </button>
-                        )}
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50">
+                    <div className="p-4 border-b border-gray-200">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={handleMarkAllAsRead}
+                                    className="text-sm text-blue-600 hover:text-blue-800"
+                                >
+                                    Mark all as read
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {error && (
-                        <div className="notification-error">
+                        <div className="p-4 bg-red-50 text-red-700">
                             {error}
                         </div>
                     )}
 
-                    <div className="notification-list">
+                    <div className="max-h-96 overflow-y-auto">
                         {loading ? (
-                            <p className="loading">Loading notifications...</p>
+                            <p className="p-4 text-gray-500 text-center">Loading notifications...</p>
                         ) : notifications.length === 0 ? (
-                            <p className="no-notifications">No notifications</p>
+                            <p className="p-4 text-gray-500 text-center">No notifications</p>
                         ) : (
                             notifications.map(notification => (
                                 <div
                                     key={notification.id}
-                                    className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                                    className={`p-4 border-b border-gray-200 hover:bg-gray-50 ${
+                                        !notification.read ? 'bg-blue-50' : ''
+                                    }`}
                                 >
-                                    <div className="notification-content">
-                                        <p>{notification.message}</p>
-                                        <small>{getTimeAgo(notification.created_at)}</small>
-                                    </div>
-                                    <div className="notification-actions">
-                                        {!notification.read && (
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-900">{notification.message}</p>
+                                            <small className="text-xs text-gray-500">{getTimeAgo(notification.created_at)}</small>
+                                        </div>
+                                        <div className="ml-4 flex space-x-2">
+                                            {!notification.read && (
+                                                <button
+                                                    onClick={() => handleMarkAsRead(notification.id)}
+                                                    className="text-green-600 hover:text-green-800"
+                                                    title="Mark as read"
+                                                >
+                                                    <i className="fas fa-check"></i>
+                                                </button>
+                                            )}
                                             <button
-                                                onClick={() => handleMarkAsRead(notification.id)}
-                                                className="mark-read"
-                                                title="Mark as read"
+                                                onClick={() => handleDelete(notification.id)}
+                                                className="text-red-600 hover:text-red-800"
+                                                title="Delete notification"
                                             >
-                                                <i className="fas fa-check"></i>
+                                                <i className="fas fa-trash"></i>
                                             </button>
-                                        )}
-                                        <button
-                                            onClick={() => handleDelete(notification.id)}
-                                            className="delete"
-                                            title="Delete notification"
-                                        >
-                                            <i className="fas fa-trash"></i>
-                                        </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))

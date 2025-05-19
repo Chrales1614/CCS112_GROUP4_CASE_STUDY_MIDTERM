@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from '../../api/axiosConfig';
-import CommentSection from '../comments/CommentSection';
+import CommentSection from '../Comments/Comments';
 import FileUpload from '../files/FileUpload';
 import './TaskDetail.css';
 

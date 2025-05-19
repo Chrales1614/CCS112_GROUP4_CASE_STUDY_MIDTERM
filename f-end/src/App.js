@@ -28,9 +28,9 @@ function App() {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Define paths where Navigation should be shown
-  const showNavigationPaths = ['/', '/projects', '/projects/create', '/tasks', '/tasks/create'];
-  const shouldShowNavigation = user && showNavigationPaths.some(path => location.pathname === path || location.pathname.startsWith(path + '/'));
+  // Define paths where Navigation should NOT be shown
+  const hideNavigationPaths = ['/login', '/register'];
+  const shouldShowNavigation = user && !hideNavigationPaths.includes(location.pathname);
 
   if (loading) {
     return <div className="container mt-5">Loading...</div>;

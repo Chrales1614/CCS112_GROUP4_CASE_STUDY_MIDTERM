@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from '../../api/axiosConfig';
+import { useAuth } from '../../contexts/AuthContext';
 import './CommentSection.css';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -10,12 +11,16 @@ const CommentSection = ({ taskId }) => {
     const [replyTo, setReplyTo] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
 
-    const fetchComments = async () => {
+    const fetchComments = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
             const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
             const response = await axios.get(`${API_BASE_URL}/tasks/${taskId}/comments`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -26,11 +31,23 @@ const CommentSection = ({ taskId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [taskId]);
 
     useEffect(() => {
-        fetchComments();
-    }, [taskId]);
+        let mounted = true;
+        
+        const loadComments = async () => {
+            if (mounted) {
+                await fetchComments();
+            }
+        };
+        
+        loadComments();
+        
+        return () => {
+            mounted = false;
+        };
+    }, [fetchComments]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -39,11 +56,19 @@ const CommentSection = ({ taskId }) => {
         try {
             setError(null);
             const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+            if (!user) {
+                throw new Error('You must be logged in to post comments');
+            }
+
             const response = await axios.post(
                 `${API_BASE_URL}/tasks/${taskId}/comments`,
                 {
                     content: newComment,
-                    parent_id: replyTo
+                    parent_id: replyTo,
+                    user_id: user.id // Explicitly include user_id
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -51,20 +76,31 @@ const CommentSection = ({ taskId }) => {
             );
 
             if (replyTo) {
-                setComments(comments.map(comment =>
-                    comment.id === replyTo
-                        ? { ...comment, replies: [...(comment.replies || []), response.data] }
-                        : comment
-                ));
+                try {
+                    setComments(prevComments => prevComments.map(comment =>
+                        comment.id === replyTo
+                            ? { ...comment, replies: Array.isArray(comment.replies) ? [...comment.replies, response.data] : [response.data] }
+                            : comment
+                    ));
+                } catch (e) {
+                    console.error('Error updating replies state:', e);
+                    setError('Failed to update comment replies');
+                }
             } else {
-                setComments([response.data, ...comments]);
+                setComments(prevComments => [response.data, ...prevComments]);
             }
 
             setNewComment('');
             setReplyTo(null);
         } catch (error) {
             console.error('Error posting comment:', error);
-            setError('Failed to post comment');
+            if (error.response?.data?.message) {
+                setError(error.response.data.message);
+            } else if (error.message) {
+                setError(error.message);
+            } else {
+                setError('Failed to post comment');
+            }
         }
     };
 

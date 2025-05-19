@@ -317,6 +317,8 @@ a:hover {
   padding: var(--spacer-2) var(--spacer-3);
   background-color: var(--primary);
   color: var(--white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 0;
 }
 
 .navbar-brand {
@@ -343,16 +345,27 @@ a:hover {
   text-decoration: none;
   font-weight: var(--font-weight-semibold);
   transition: var(--transition-base);
+  position: relative;
+  padding: 0.5rem 1rem;
 }
 
 .nav-link:hover {
   opacity: 0.8;
   text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
 .nav-link.active {
   font-weight: var(--font-weight-bold);
   text-decoration: underline;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.nav-link .h-5 {
+  width: 20px;
+  height: 20px;
 }
 
 /* Tables */
@@ -629,4 +642,18 @@ a:hover {
   .w-xl-100 { width: 100% !important; }
   
   .text-xl-center { text-align: center !important; }
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    padding: 1rem 0;
+  }
+  
+  .nav-link {
+    padding: 0.75rem 1rem;
+  }
+  
+  .navbar-nav {
+    margin-bottom: 1rem;
+  }
 }
