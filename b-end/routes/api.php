@@ -27,9 +27,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // User profile route
-    Route::get('/user', function (\Illuminate\Http\Request $request) {
+    Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
@@ -68,9 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
 
     // Reports Routes
-    Route::get('/reports/project-data', [ReportController::class, 'getProjectData']);
-    Route::get('/reports/risk-metrics', [ReportController::class, 'getRiskMetrics']);
-    Route::get('/reports/task-trends', [ReportController::class, 'getTaskTrends']);
+    Route::middleware(['role:admin,manager'])->group(function () {
+        Route::get('/reports/projects', [ReportController::class, 'getProjects']);
+        Route::get('/reports/project/{project}/data', [ReportController::class, 'getProjectData']);
+        Route::get('/reports/project/{project}/risk-metrics', [ReportController::class, 'getRiskMetrics']);
+        Route::get('/reports/project/{project}/task-trends', [ReportController::class, 'getTaskTrends']);
+    });
 
     // Risk Management Routes
     Route::apiResource('risks', RiskController::class);

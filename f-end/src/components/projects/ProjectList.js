@@ -12,18 +12,53 @@ const ProjectList = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          setError('No authentication token found. Please log in again.');
+          setLoading(false);
+          return;
+        }
+
         const headers = { Authorization: `Bearer ${token}` };
         
         // Fetch user profile to get role
+        console.log('Fetching user profile...');
         const userResponse = await axios.get('http://localhost:8000/api/user', { headers });
+        console.log('User profile response:', userResponse.data);
         setUserRole(userResponse.data.role);
 
         // Fetch projects (will be filtered on backend based on role)
-        const projectsResponse = await axios.get('http://localhost:8000/api/projects', { headers });
+        console.log('Fetching projects...');
+        const projectsResponse = await axios.get('http://localhost:8000/api/projects', { 
+          headers,
+          timeout: 10000 // 10 second timeout
+        });
+        console.log('Projects response:', projectsResponse.data);
+        
+        if (!projectsResponse.data.projects) {
+          throw new Error('Invalid response format: missing projects array');
+        }
+
         setProjects(projectsResponse.data.projects);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch projects');
+        console.error('Error details:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status
+        });
+
+        if (err.response?.status === 401) {
+          setError('Authentication failed. Please log in again.');
+          // Clear token and redirect to login
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        } else if (err.response?.status === 403) {
+          setError('You do not have permission to view projects.');
+        } else if (err.code === 'ECONNABORTED') {
+          setError('Request timed out. Please check your connection and try again.');
+        } else {
+          setError(err.response?.data?.message || 'Failed to fetch projects. Please try again.');
+        }
         setLoading(false);
       }
     };

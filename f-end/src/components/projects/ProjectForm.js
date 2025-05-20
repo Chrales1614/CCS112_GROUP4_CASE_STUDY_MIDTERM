@@ -25,33 +25,91 @@ const ProjectForm = () => {
     if (isEditing) {
       const fetchProject = async () => {
         try {
+          setError(null);
           const token = localStorage.getItem('token');
+          if (!token) {
+            setError('No authentication token found. Please log in again.');
+            setLoading(false);
+            return;
+          }
+
+          console.log('Fetching project details for ID:', id);
           const response = await axios.get(`http://localhost:8000/api/projects/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
             },
+            timeout: 10000 // 10 second timeout
           });
 
+          console.log('Project details response:', response.data);
+
+          if (!response.data.project) {
+            console.error('Invalid response format:', response.data);
+            throw new Error('Invalid response format: missing project data');
+          }
+
           const project = response.data.project;
+          console.log('Project data:', project);
+
+          // Validate required fields
+          if (!project.name || !project.status || !project.start_date) {
+            console.error('Missing required project fields:', {
+              hasName: !!project.name,
+              hasStatus: !!project.status,
+              hasStartDate: !!project.start_date
+            });
+            throw new Error('Project data is incomplete');
+          }
+
           setFormData({
-            name: project.name,
+            name: project.name || '',
             description: project.description || '',
             start_date: project.start_date ? project.start_date.split('T')[0] : '',
             end_date: project.end_date ? project.end_date.split('T')[0] : '',
-            status: project.status,
-            budget: Array.isArray(project.budget) && project.budget.length > 0 ? project.budget : [{ item: '', amount: '' }],
-            actual_expenditure: project.actual_expenditure !== null ? project.actual_expenditure.toString() : '',
+            status: project.status || 'planning',
+            budget: Array.isArray(project.budget) && project.budget.length > 0 
+              ? project.budget 
+              : [{ item: '', amount: '' }],
+            actual_expenditure: project.actual_expenditure !== null 
+              ? project.actual_expenditure.toString() 
+              : '',
           });
           setLoading(false);
         } catch (err) {
-          setError('Failed to fetch project details');
+          console.error('Error fetching project details:', {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status,
+            stack: err.stack
+          });
+
+          if (!navigator.onLine) {
+            setError('No internet connection. Please check your network and try again.');
+          } else if (err.code === 'ECONNABORTED') {
+            setError('Request timed out. Please try again.');
+          } else if (err.response?.status === 401) {
+            setError('Authentication failed. Please log in again.');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          } else if (err.response?.status === 403) {
+            setError('You do not have permission to edit this project.');
+          } else if (err.response?.status === 404) {
+            setError('Project not found.');
+            navigate('/projects');
+          } else if (err.response?.data?.message) {
+            setError(`Failed to fetch project details: ${err.response.data.message}`);
+          } else {
+            setError('Failed to fetch project details. Please try again.');
+          }
           setLoading(false);
         }
       };
 
       fetchProject();
     }
-  }, [id, isEditing]);
+  }, [id, isEditing, navigate]);
 
   useEffect(() => {
     // Calculate initial budget status
@@ -211,7 +269,7 @@ const ProjectForm = () => {
         <div className="mb-3">
           <label htmlFor="status" className="form-label">Status</label>
           <select
-            className="form-select"
+            className="form-control"
             id="status"
             name="status"
             value={formData.status}
@@ -219,9 +277,9 @@ const ProjectForm = () => {
             required
           >
             <option value="planning">Planning</option>
-            <option value="active">Active</option>
-            <option value="on_hold">On Hold</option>
+            <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="on-hold">On Hold</option>
           </select>
         </div>
 

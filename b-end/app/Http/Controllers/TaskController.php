@@ -208,7 +208,39 @@ class TaskController extends Controller
                 ]);
             }
 
-            return response()->json(['task' => $task]);
+            // Add this to the update method where we change task status
+            if ($request->status === 'completed' && $task->status !== 'completed') {
+                $task->completed_at = now();
+            } elseif ($request->status !== 'completed') {
+                $task->completed_at = null;
+            }
+
+            // Load relationships before returning
+            $task->load(['project', 'assignedUser']);
+            
+            // Transform task data to match frontend expectations
+            $transformedTask = [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'project_id' => $task->project_id,
+                'assigned_to' => $task->assigned_to,
+                'status' => $task->status,
+                'priority' => $task->priority,
+                'due_date' => $task->due_date,
+                'start_date' => $task->start_date,
+                'created_at' => $task->created_at,
+                'assignedUser' => $task->assignedUser ? [
+                    'id' => $task->assignedUser->id,
+                    'name' => $task->assignedUser->name,
+                ] : null,
+                'project' => $task->project ? [
+                    'id' => $task->project->id,
+                    'name' => $task->project->name,
+                ] : null,
+            ];
+            
+            return response()->json(['task' => $transformedTask]);
         } catch (\Exception $e) {
             Log::error('Failed to update task: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update task', 'message' => $e->getMessage()], 500);

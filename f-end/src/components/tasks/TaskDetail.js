@@ -66,6 +66,12 @@ const TaskDetail = () => {
         setError('User not authenticated');
         return;
       }
+
+      // Don't update if the status is the same
+      if (task.status === newStatus) {
+        return;
+      }
+
       // Send full task data for update
       const response = await axios.put(
         `${API_BASE_URL}/tasks/${taskId}`,
@@ -83,10 +89,22 @@ const TaskDetail = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      setTask(response.data.task);
+      
+      if (response.data && response.data.task) {
+        // Update the task state with the transformed data
+        setTask(response.data.task);
+        setError(null); // Clear any existing error
+      } else {
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
       console.error('Error updating task status:', error);
-      setError('Failed to update task status');
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Failed to update task status');
+      }
     }
   };
   

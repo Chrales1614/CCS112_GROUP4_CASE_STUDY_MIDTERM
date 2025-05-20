@@ -14,11 +14,14 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('description')->nullable();
-            $table->date('start_date');
+            $table->text('description');
+            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->json('budget')->nullable();
+            $table->decimal('actual_expenditure', 10, 2)->default(0);
+            $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->string('status')->default('planning');
-            $table->foreignId('user_id')->constrained('users');
+            $table->enum('status', ['planning', 'in-progress', 'completed', 'on-hold'])->default('planning');
             $table->timestamps();
         });
     }

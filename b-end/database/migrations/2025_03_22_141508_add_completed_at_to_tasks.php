@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->json('budget')->nullable()->after('status');
-            $table->decimal('actual_expenditure', 15, 2)->nullable()->after('budget');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->timestamp('completed_at')->nullable();
         });
     }
 
@@ -22,8 +21,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->dropColumn(['budget', 'actual_expenditure']);
+        Schema::table('tasks', function (Blueprint $table) {
+            if (Schema::hasColumn('tasks', 'completed_at')) {
+                $table->dropColumn('completed_at');
+            }
         });
     }
-};
+}; 

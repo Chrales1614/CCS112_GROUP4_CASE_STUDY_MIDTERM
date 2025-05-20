@@ -12,9 +12,10 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->enum('severity', ['low', 'medium', 'high', 'critical']);
-            $table->enum('status', ['open', 'in-progress', 'resolved']);
+            $table->enum('severity', ['low', 'medium', 'high']);
+            $table->enum('status', ['active', 'mitigated']);
             $table->text('mitigation');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
