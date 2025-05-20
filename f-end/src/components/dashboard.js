@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-
+//Dashboard
 const Dashboard = ({ onLogout }) => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
