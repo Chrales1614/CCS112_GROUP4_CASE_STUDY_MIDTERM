@@ -27,11 +27,16 @@ class ProjectController extends Controller
 
             $query = Project::with(['user', 'tasks', 'manager']);
 
-            // If user is admin or project manager, show all projects
-            if ($user->isAdmin() || $user->isProjectManager()) {
+            // If user is admin, show all projects
+            if ($user->isAdmin()) {
                 $projects = $query->get();
-                Log::info('Fetched all projects for admin/manager');
+                Log::info('Fetched all projects for admin');
             } 
+            // For project managers, only show projects they created
+            else if ($user->isProjectManager()) {
+                $projects = $query->where('user_id', $user->id)->get();
+                Log::info('Fetched projects for project manager');
+            }
             // For team members, only show projects where they are assigned to tasks
             else if ($user->isTeamMember()) {
                 $projects = Project::whereHas('tasks', function($query) use ($user) {

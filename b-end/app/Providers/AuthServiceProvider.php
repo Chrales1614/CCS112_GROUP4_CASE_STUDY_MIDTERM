@@ -41,8 +41,24 @@ class AuthServiceProvider extends ServiceProvider
             return $user->isAdmin() || $user->isProjectManager() || $user->isTeamMember();
         });
 
-        Gate::define('view-reports', function ($user) {
-            return $user->isAdmin() || $user->isProjectManager();
+        Gate::define('view-reports', function ($user, $project = null) {
+            if (!$project) {
+                return $user->isAdmin() || $user->isProjectManager() || $user->isTeamMember();
+            }
+            
+            return $user->isAdmin() || 
+                   ($user->isProjectManager() && $project->manager_id === $user->id) ||
+                   ($user->isTeamMember() && $project->tasks()->where('assigned_to', $user->id)->exists());
+        });
+
+        Gate::define('manage-risks', function ($user, $project = null) {
+            if (!$project) {
+                return $user->isAdmin() || $user->isProjectManager() || $user->isTeamMember();
+            }
+            
+            return $user->isAdmin() || 
+                   ($user->isProjectManager() && $project->manager_id === $user->id) ||
+                   ($user->isTeamMember() && $project->tasks()->where('assigned_to', $user->id)->exists());
         });
     }
 }
