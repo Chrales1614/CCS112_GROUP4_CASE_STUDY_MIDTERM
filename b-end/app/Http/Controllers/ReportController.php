@@ -19,17 +19,39 @@ class ReportController extends Controller
             $user = Auth::user();
             
             // If admin, return all projects
-            if ($user->role === 'admin') {
-                $projects = Project::all();
+            if ($user->isAdmin()) {
+                $projects = Project::with(['manager', 'user'])->get();
             } 
-            // If manager, return only projects they created
-            else if ($user->role === 'manager') {
-                $projects = Project::where('manager_id', $user->id)->get();
+            // If project manager, return only projects they created
+            else if ($user->isProjectManager()) {
+                $projects = Project::with(['manager', 'user'])
+                    ->where('user_id', $user->id)  // Only show projects created by this manager
+                    ->get();
+            }
+            // If team member, return projects where they are assigned to tasks
+            else if ($user->isTeamMember()) {
+                $projects = Project::with(['manager', 'user'])
+                    ->whereHas('tasks', function($query) use ($user) {
+                        $query->where('assigned_to', $user->id);
+                    })
+                    ->get();
+            }
+            // If client, return their own projects
+            else if ($user->isClient()) {
+                $projects = Project::with(['manager', 'user'])
+                    ->where('user_id', $user->id)
+                    ->get();
             }
             // If neither, return empty array
             else {
                 $projects = [];
             }
+
+            Log::info('Projects fetched for user', [
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'projects_count' => $projects->count()
+            ]);
 
             return response()->json(['projects' => $projects]);
         } catch (\Exception $e) {
@@ -45,7 +67,25 @@ class ReportController extends Controller
             $project = Project::findOrFail($projectId);
 
             // Check if user has access to this project
-            if ($user->role !== 'admin' && ($user->role !== 'manager' || $project->manager_id !== $user->id)) {
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -123,7 +163,25 @@ class ReportController extends Controller
             $project = Project::findOrFail($projectId);
 
             // Check if user has access to this project
-            if ($user->role !== 'admin' && ($user->role !== 'manager' || $project->manager_id !== $user->id)) {
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 
@@ -152,7 +210,25 @@ class ReportController extends Controller
             $project = Project::findOrFail($projectId);
 
             // Check if user has access to this project
-            if ($user->role !== 'admin' && ($user->role !== 'manager' || $project->manager_id !== $user->id)) {
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
 

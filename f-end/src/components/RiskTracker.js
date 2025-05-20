@@ -176,7 +176,7 @@ const RiskTracker = () => {
   };
 
   // If user is not admin or manager, show access denied message
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+  if (!user) {
     return (
       <div className="risk-tracker-container p-4">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">

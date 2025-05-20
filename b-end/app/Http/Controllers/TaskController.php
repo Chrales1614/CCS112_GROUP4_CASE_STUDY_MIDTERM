@@ -13,45 +13,106 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Task::query();
-        
-        if ($request->has('project_id')) {
-            $query->where('project_id', $request->project_id);
-        }
-        
-        if ($request->has('assigned_to_me') && $request->assigned_to_me) {
-            $query->where('assigned_to', auth()->id());
-        }
-        
-        if ($request->has('limit')) {
-            $query->limit($request->limit);
-        }
-        
-        $tasks = $query->with(['project', 'assignedUser'])->get();
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-        $transformedTasks = $tasks->map(function ($task) {
-            return [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => $task->description,
-                'project_id' => $task->project_id,
-                'assigned_to' => $task->assigned_to,
-                'status' => $task->status,
-                'priority' => $task->priority,
-                'due_date' => $task->due_date,
-                'start_date' => $task->start_date,
-                'assignedUser' => $task->assignedUser ? [
-                    'id' => $task->assignedUser->id,
-                    'name' => $task->assignedUser->name,
-                ] : null,
-                'project' => $task->project ? [
-                    'id' => $task->project->id,
-                    'name' => $task->project->name,
-                ] : null,
-            ];
-        });
+            $query = Task::query();
+            
+            // If project_id is provided, filter tasks by project
+            if ($request->has('project_id')) {
+                $project = Project::find($request->project_id);
+                if (!$project) {
+                    return response()->json(['error' => 'Project not found'], 404);
+                }
 
-        return response()->json(['tasks' => $transformedTasks]);
+                // Check access based on user role
+                if ($user->isAdmin()) {
+                    // Admin can see all tasks
+                    $query->where('project_id', $request->project_id);
+                } else if ($user->isProjectManager()) {
+                    // Project manager can only see tasks from projects they created
+                    if ($project->user_id === $user->id) {
+                        $query->where('project_id', $request->project_id);
+                    } else {
+                        return response()->json(['error' => 'Unauthorized'], 403);
+                    }
+                } else if ($user->isTeamMember()) {
+                    // Team member can see tasks assigned to them
+                    $query->where('project_id', $request->project_id)
+                          ->where('assigned_to', $user->id);
+                } else if ($user->isClient()) {
+                    // Client can see tasks from their projects
+                    if ($project->user_id === $user->id) {
+                        $query->where('project_id', $request->project_id);
+                    } else {
+                        return response()->json(['error' => 'Unauthorized'], 403);
+                    }
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            } else {
+                // If no project_id provided, filter based on user role
+                if ($user->isAdmin()) {
+                    // Admin can see all tasks
+                    $query->whereHas('project');
+                } else if ($user->isProjectManager()) {
+                    // Project manager can only see tasks from projects they created
+                    $query->whereHas('project', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+                } else if ($user->isTeamMember()) {
+                    // Team member can only see tasks assigned to them
+                    $query->where('assigned_to', $user->id);
+                } else if ($user->isClient()) {
+                    // Client can only see tasks from their projects
+                    $query->whereHas('project', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            }
+            
+            if ($request->has('assigned_to_me') && $request->assigned_to_me) {
+                $query->where('assigned_to', $user->id);
+            }
+            
+            if ($request->has('limit')) {
+                $query->limit($request->limit);
+            }
+            
+            $tasks = $query->with(['project', 'assignedUser'])->get();
+
+            $transformedTasks = $tasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'description' => $task->description,
+                    'project_id' => $task->project_id,
+                    'assigned_to' => $task->assigned_to,
+                    'status' => $task->status,
+                    'priority' => $task->priority,
+                    'due_date' => $task->due_date,
+                    'start_date' => $task->start_date,
+                    'assignedUser' => $task->assignedUser ? [
+                        'id' => $task->assignedUser->id,
+                        'name' => $task->assignedUser->name,
+                    ] : null,
+                    'project' => $task->project ? [
+                        'id' => $task->project->id,
+                        'name' => $task->project->name,
+                    ] : null,
+                ];
+            });
+
+            return response()->json(['tasks' => $transformedTasks]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch tasks: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch tasks', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
@@ -276,30 +337,71 @@ class TaskController extends Controller
 
     public function getProjectTasks($projectId)
     {
-        $project = Project::findOrFail($projectId);
-        $tasks = Task::where('project_id', $projectId)
-                    ->with(['assignedUser'])
-                    ->get();
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-        // Transform tasks to ensure assignedUser is included properly.
-        $transformedTasks = $tasks->map(function ($task) {
-            return [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => $task->description,
-                'project_id' => $task->project_id,
-                'assigned_to' => $task->assigned_to,
-                'status' => $task->status,
-                'priority' => $task->priority,
-                'due_date' => $task->due_date,
-                'start_date' => $task->start_date,
-                'assignedUser' => $task->assignedUser ? [
-                    'id' => $task->assignedUser->id,
-                    'name' => $task->assignedUser->name,
-                ] : null,
-            ];
-        });
+            $project = Project::findOrFail($projectId);
 
-        return response()->json(['tasks' => $transformedTasks]);
+            // Check access based on user role
+            if ($user->isAdmin()) {
+                // Admin can see all tasks
+                $tasks = Task::where('project_id', $projectId)
+                            ->with(['assignedUser'])
+                            ->get();
+            } else if ($user->isProjectManager()) {
+                // Project manager can only see tasks from projects they created
+                if ($project->user_id === $user->id) {
+                    $tasks = Task::where('project_id', $projectId)
+                                ->with(['assignedUser'])
+                                ->get();
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            } else if ($user->isTeamMember()) {
+                // Team member can only see tasks assigned to them
+                $tasks = Task::where('project_id', $projectId)
+                            ->where('assigned_to', $user->id)
+                            ->with(['assignedUser'])
+                            ->get();
+            } else if ($user->isClient()) {
+                // Client can only see tasks from their projects
+                if ($project->user_id === $user->id) {
+                    $tasks = Task::where('project_id', $projectId)
+                                ->with(['assignedUser'])
+                                ->get();
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            } else {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // Transform tasks to ensure assignedUser is included properly
+            $transformedTasks = $tasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'description' => $task->description,
+                    'project_id' => $task->project_id,
+                    'assigned_to' => $task->assigned_to,
+                    'status' => $task->status,
+                    'priority' => $task->priority,
+                    'due_date' => $task->due_date,
+                    'start_date' => $task->start_date,
+                    'assignedUser' => $task->assignedUser ? [
+                        'id' => $task->assignedUser->id,
+                        'name' => $task->assignedUser->name,
+                    ] : null,
+                ];
+            });
+
+            return response()->json(['tasks' => $transformedTasks]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch project tasks: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch project tasks', 'message' => $e->getMessage()], 500);
+        }
     }
 }

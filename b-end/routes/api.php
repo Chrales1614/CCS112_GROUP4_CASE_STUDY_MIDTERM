@@ -68,7 +68,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
 
     // Reports Routes
-    Route::middleware(['role:admin,manager'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/reports/projects', [ReportController::class, 'getProjects']);
         Route::get('/reports/project/{project}/data', [ReportController::class, 'getProjectData']);
         Route::get('/reports/project/{project}/risk-metrics', [ReportController::class, 'getRiskMetrics']);

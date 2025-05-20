@@ -37,15 +37,45 @@ class RiskController extends Controller
                     return response()->json(['error' => 'Project not found'], 404);
                 }
 
-                $query->where('project_id', $projectId);
-            }
-
-            // If user is not admin, only show risks from their projects
-            if (!$user->isAdmin()) {
-                $query->whereHas('project', function($q) use ($user) {
-                    $q->where('manager_id', $user->id)
-                      ->orWhere('user_id', $user->id);
-                });
+                // Check if user has access to this project
+                if ($user->isAdmin()) {
+                    // Admin can access all projects
+                    $query->where('project_id', $projectId);
+                } else if ($user->isProjectManager() && $project->user_id === $user->id) {
+                    // Project manager can only access projects they created
+                    $query->where('project_id', $projectId);
+                } else if ($user->isTeamMember() && $project->tasks()->where('assigned_to', $user->id)->exists()) {
+                    // Team member can access projects where they have assigned tasks
+                    $query->where('project_id', $projectId);
+                } else if ($user->isClient() && $project->user_id === $user->id) {
+                    // Client can access their own projects
+                    $query->where('project_id', $projectId);
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+            } else {
+                // If no project_id provided, filter based on user role
+                if ($user->isAdmin()) {
+                    // Admin can see all risks
+                    $query->whereHas('project');
+                } else if ($user->isProjectManager()) {
+                    // Project manager can only see risks from projects they created
+                    $query->whereHas('project', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+                } else if ($user->isTeamMember()) {
+                    // Team member can see risks from projects where they are assigned to tasks
+                    $query->whereHas('project.tasks', function($q) use ($user) {
+                        $q->where('assigned_to', $user->id);
+                    });
+                } else if ($user->isClient()) {
+                    // Client can see risks from their own projects
+                    $query->whereHas('project', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+                } else {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
             }
 
             $risks = $query->latest()->get();
@@ -53,6 +83,7 @@ class RiskController extends Controller
             Log::info('Successfully fetched risks', [
                 'count' => $risks->count(),
                 'user_id' => $user->id,
+                'user_role' => $user->role,
                 'project_id' => $request->project_id ?? 'all'
             ]);
 
@@ -78,10 +109,35 @@ class RiskController extends Controller
                 'project_id' => 'required|exists:projects,id'
             ]);
 
+            $user = Auth::user();
+            $project = Project::findOrFail($validated['project_id']);
+
+            // Check if user has access to this project
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
             $risk = Risk::create($validated);
 
             // Create notification for project manager and admin
-            $project = Project::find($validated['project_id']);
             if ($project) {
                 // Notify project manager
                 if ($project->manager_id) {
@@ -115,7 +171,33 @@ class RiskController extends Controller
     public function show(Risk $risk)
     {
         try {
-            return response()->json(['risk' => $risk->load('project')]);
+            $user = Auth::user();
+            $project = $risk->project;
+
+            // Check if user has access to this project
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            return response()->json(['risk' => $risk]);
         } catch (\Exception $e) {
             Log::error('Failed to fetch risk: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch risk'], 500);
@@ -125,6 +207,32 @@ class RiskController extends Controller
     public function update(Request $request, Risk $risk)
     {
         try {
+            $user = Auth::user();
+            $project = $risk->project;
+
+            // Check if user has access to this project
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
             $validated = $request->validate([
                 'title' => 'sometimes|string|max:255',
                 'description' => 'sometimes|string',
@@ -138,7 +246,6 @@ class RiskController extends Controller
 
             // If risk was mitigated, create notification
             if ($oldStatus !== 'mitigated' && $risk->status === 'mitigated') {
-                $project = $risk->project;
                 if ($project) {
                     // Notify project manager
                     if ($project->manager_id) {
@@ -173,6 +280,32 @@ class RiskController extends Controller
     public function destroy(Risk $risk)
     {
         try {
+            $user = Auth::user();
+            $project = $risk->project;
+
+            // Check if user has access to this project
+            if (!$user->isAdmin() && 
+                !$user->isProjectManager() && 
+                !$user->isTeamMember() &&
+                !$user->isClient()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For project managers, check if they manage this project
+            if ($user->isProjectManager() && $project->manager_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For team members, check if they are assigned to any tasks in this project
+            if ($user->isTeamMember() && !$project->tasks()->where('assigned_to', $user->id)->exists()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // For clients, check if they own this project
+            if ($user->isClient() && $project->user_id !== $user->id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
             $risk->delete();
             return response()->json(null, 204);
         } catch (\Exception $e) {
